@@ -8,13 +8,22 @@ function getSupabaseFunctionUrl(fnName) {
   return `${base.replace(/\/+$/, '')}/functions/v1/${fnName}`
 }
 
+function getSupabaseAuthHeaders() {
+  const anonKey = sanitize(import.meta.env.VITE_SUPABASE_ANON_KEY || '')
+  if (!anonKey) return {}
+  return {
+    apikey: anonKey,
+    Authorization: `Bearer ${anonKey}`,
+  }
+}
+
 export async function requestSupabaseDsarExport(user) {
   const url = getSupabaseFunctionUrl('dsar-export')
   if (!url) return { ok: false, message: 'Supabase DSAR Export Endpoint nicht konfiguriert.' }
   try {
     const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...getSupabaseAuthHeaders() },
       body: JSON.stringify({ userId: user?.id, email: user?.email }),
     })
     const data = await res.json().catch(() => null)
@@ -31,7 +40,7 @@ export async function requestSupabaseDsarDelete(user) {
   try {
     const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...getSupabaseAuthHeaders() },
       body: JSON.stringify({ userId: user?.id, email: user?.email }),
     })
     const data = await res.json().catch(() => null)

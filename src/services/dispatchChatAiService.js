@@ -10,6 +10,15 @@ function sanitize(text) {
   return String(text || '').replace(/\s+/g, ' ').trim()
 }
 
+function getSupabaseAuthHeaders() {
+  const anonKey = sanitize(import.meta.env.VITE_SUPABASE_ANON_KEY || '')
+  if (!anonKey) return {}
+  return {
+    apikey: anonKey,
+    Authorization: `Bearer ${anonKey}`,
+  }
+}
+
 export async function requestDispatchReply({ eventTitle, eventContext = null, userMessage, history = [], signal }) {
   const aiConsentGranted = (() => {
     try { return localStorage.getItem(STORAGE_CONSENT_KEY) === 'granted' } catch { return false }
@@ -40,7 +49,7 @@ export async function requestDispatchReply({ eventTitle, eventContext = null, us
   try {
     const res = await fetch(endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...getSupabaseAuthHeaders() },
       body: JSON.stringify({
         system,
         eventTitle: sanitize(eventTitle),

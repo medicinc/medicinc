@@ -37,6 +37,15 @@ function getSupabaseFunctionUrl(functionName) {
   return `${base.replace(/\/+$/, '')}/functions/v1/${functionName}`
 }
 
+function getSupabaseAuthHeaders() {
+  const anonKey = sanitizeText(import.meta.env.VITE_SUPABASE_ANON_KEY || '')
+  if (!anonKey) return {}
+  return {
+    apikey: anonKey,
+    Authorization: `Bearer ${anonKey}`,
+  }
+}
+
 function redactedPatientPayload(patient) {
   const diagnosis = patient?.trueDiagnoses?.primary || patient?.diagnoses?.primary || null
   return {
@@ -135,7 +144,7 @@ export async function requestAiPatientReply({
   try {
     const response = await fetch(endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...getSupabaseAuthHeaders() },
       signal,
       body: JSON.stringify({
         mode,
