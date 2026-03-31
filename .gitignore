@@ -1,3 +1,8 @@
 .vercel
 imaging-source/
 *.dcm
+node_modules/
+dist/
+supabase/.temp/
+.env
+.env.local

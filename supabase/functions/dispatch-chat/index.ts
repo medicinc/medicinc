@@ -1,4 +1,9 @@
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions'
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+}
 
 function sanitize(value: unknown) {
   return String(value || '').replace(/\s+/g, ' ').trim()
@@ -15,9 +20,10 @@ function outputGuardrail(text: string) {
 }
 
 Deno.serve(async (request) => {
+  if (request.method === 'OPTIONS') return new Response('ok', { headers: CORS_HEADERS })
   if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 })
   const apiKey = Deno.env.get('OPENAI_API_KEY')
-  if (!apiKey) return Response.json({ message: 'OPENAI_API_KEY fehlt.' }, { status: 500 })
+  if (!apiKey) return Response.json({ message: 'OPENAI_API_KEY fehlt.' }, { status: 500, headers: CORS_HEADERS })
   try {
     const body = await request.json()
     const history = Array.isArray(body?.history) ? body.history : []
@@ -51,11 +57,11 @@ Deno.serve(async (request) => {
       body: JSON.stringify(payload),
     })
     const data = await res.json().catch(() => null)
-    if (!res.ok) return Response.json({ message: sanitize(data?.error?.message || 'AI Anfrage fehlgeschlagen') }, { status: res.status })
+    if (!res.ok) return Response.json({ message: sanitize(data?.error?.message || 'AI Anfrage fehlgeschlagen') }, { status: res.status, headers: CORS_HEADERS })
     const text = outputGuardrail(sanitize(data?.choices?.[0]?.message?.content))
-    if (!text) return Response.json({ message: 'Keine Antwort erhalten.' }, { status: 502 })
-    return Response.json({ text })
+    if (!text) return Response.json({ message: 'Keine Antwort erhalten.' }, { status: 502, headers: CORS_HEADERS })
+    return Response.json({ text }, { headers: CORS_HEADERS })
   } catch (error) {
-    return Response.json({ message: String((error as Error)?.message || error || 'Unbekannter Fehler') }, { status: 500 })
+    return Response.json({ message: String((error as Error)?.message || error || 'Unbekannter Fehler') }, { status: 500, headers: CORS_HEADERS })
   }
 })
