@@ -1542,12 +1542,12 @@ export default function MaterialCartUI({ patient, onAction, savedState, onSaveSt
           <p className="font-semibold text-surface-900">Materialwagen</p>
           <div className="flex items-center gap-2">
             {canUseDebugTools && (
-              <button
-                onClick={() => setDebugOpen((v) => !v)}
-                className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200"
-              >
-                Debug
-              </button>
+            <button
+              onClick={() => setDebugOpen((v) => !v)}
+              className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200"
+            >
+              Debug
+            </button>
             )}
             <span className="text-xs px-2 py-0.5 rounded-full bg-surface-100 text-surface-700">{startedCount} aktiv</span>
           </div>
@@ -1818,9 +1818,9 @@ export default function MaterialCartUI({ patient, onAction, savedState, onSaveSt
                       <p className="text-xs text-surface-600">Sterile Wundversorgung</p>
                       <p className="text-[11px] text-surface-500 mt-1">Interaktiver Ablauf mit Instrumententablett: Spülung, Debridement, Naht, Verband.</p>
                       <p className="text-[11px] text-surface-600 mt-2">Status: <span className="font-semibold">{woundStatusLabel}</span> · Qualitaet {woundQualityScore}% · Infektion {woundInfectionStage}%</p>
-                    </div>
+                  </div>
                     <div className="flex flex-col gap-2">
-                      <button
+                    <button
                         onClick={openSurgicalMiniGame}
                         className="text-xs px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
                       >
@@ -1831,8 +1831,8 @@ export default function MaterialCartUI({ patient, onAction, savedState, onSaveSt
                         className="text-xs px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200"
                       >
                         Kontrollieren
-                      </button>
-                    </div>
+                    </button>
+                  </div>
                   </div>
                   <div className="mt-3 grid grid-cols-3 gap-2">
                     <img src={toolIrrigationAsset} alt="Spülset" className="w-full h-16 object-contain rounded-lg border border-surface-200 bg-surface-50" />
@@ -1856,21 +1856,21 @@ export default function MaterialCartUI({ patient, onAction, savedState, onSaveSt
                     <p className="text-xs text-surface-600">Interaktive Frakturversorgung</p>
                     <p className="text-[11px] text-surface-500 mt-1">{fractureTypeLabel} • Ablauf: Unterpolster, Schiene, Aktivieren, Wickeln, Modellieren, DMS</p>
                     <p className="text-[11px] text-surface-600 mt-2">Status: <span className="font-semibold">{fractureStatusLabel}</span> · Immobilisation {fractureImmobilizationScore}%</p>
-                  </div>
+                </div>
                   <div className="flex flex-col gap-2">
                     <button
                       onClick={openFractureMiniGame}
                       className="text-xs px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
                     >
                       {castAlreadyApplied ? 'Neu versorgen' : 'Versorgung beginnen'}
-                    </button>
+                  </button>
                     <button
                       onClick={inspectFractureCare}
                       className="text-xs px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200"
                     >
                       Kontrollieren
-                    </button>
-                  </div>
+                  </button>
+                </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <img src={toolSplintAsset} alt="Schiene" className="w-full h-16 object-contain rounded-lg border border-surface-200 bg-surface-50" />
@@ -1914,7 +1914,7 @@ export default function MaterialCartUI({ patient, onAction, savedState, onSaveSt
               <div>
                 <p className="font-semibold text-surface-900">Chirurgische Wundversorgung ({affectedRegion})</p>
                 <p className="text-xs text-surface-500">{surgicalWoundTypeLabel} • {suturePatternLabel} • Steriler Ablauf mit Instrumententablett</p>
-              </div>
+            </div>
               <button onClick={() => setSurgicalMiniOpen(false)} className="btn-secondary text-xs">Schließen</button>
             </div>
 
@@ -1969,9 +1969,9 @@ export default function MaterialCartUI({ patient, onAction, savedState, onSaveSt
                         <g key={`stitch_line_${idx}`} opacity={0.9}>
                           <line x1={point.x - 1.1} y1={point.y - 1.2} x2={point.x + 1.1} y2={point.y + 1.2} stroke="#0f766e" strokeWidth="0.7" />
                           <line x1={point.x - 1.1} y1={point.y + 1.2} x2={point.x + 1.1} y2={point.y - 1.2} stroke="#0f766e" strokeWidth="0.7" />
-                        </g>
-                      )
-                    })}
+                    </g>
+                  )
+                })}
                     {bandageCoverageRatio > 0 && (
                       <g opacity={0.45 + (bandageCoverageRatio * 0.4)}>
                         <rect x={surgicalWoundType === 'stich' ? 45 : 34} y={surgicalWoundType === 'stich' ? 47 : 45} width={(surgicalWoundType === 'stich' ? 16 : 36) * bandageCoverageRatio} height="3.7" rx="1.6" fill="#e2e8f0" />
@@ -1982,7 +1982,7 @@ export default function MaterialCartUI({ patient, onAction, savedState, onSaveSt
                     {debridementRemainingRatio > 0 && (
                       <ellipse cx="53" cy="52" rx={11 * debridementRemainingRatio} ry={5.5 * debridementRemainingRatio} fill="#7f1d1d" opacity="0.17" />
                     )}
-                  </svg>
+              </svg>
 
                   <div
                     className="absolute rounded-full border-2 border-rose-300/80 bg-rose-100/40 pointer-events-none"
@@ -2011,7 +2011,7 @@ export default function MaterialCartUI({ patient, onAction, savedState, onSaveSt
                   >
                     <img src={debridementContainerAsset} alt="Container" className="w-full h-16 object-contain pointer-events-none" />
                     <p className="text-[10px] text-cyan-800 text-center mt-1">{surgicalDepositedCount}/{surgicalDebrisTemplate.length}</p>
-                  </div>
+            </div>
 
                   {surgicalSutureTargetPoints.map((point, idx) => {
                     const done = surgicalSuturePlaced.includes(idx)
@@ -2282,7 +2282,7 @@ export default function MaterialCartUI({ patient, onAction, savedState, onSaveSt
                         />
                         <p className="text-[10px] font-medium text-surface-800">{tool.label}</p>
                         <p className="text-[9px] text-surface-500 mt-0.5">{tool.helper}</p>
-                      </button>
+              </button>
                     ))}
                   </div>
                 </div>
@@ -2444,7 +2444,7 @@ export default function MaterialCartUI({ patient, onAction, savedState, onSaveSt
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-semibold text-surface-900">Venösen Zugang legen</p>
+              <p className="font-semibold text-surface-900">Venösen Zugang legen</p>
                 <p className="text-xs text-surface-500">
                   {accessDraft.stage === 'setup' ? '1/2 Vorbereitung' : '2/2 Minigame'}
                 </p>
@@ -2457,8 +2457,8 @@ export default function MaterialCartUI({ patient, onAction, savedState, onSaveSt
                   <div className="rounded-2xl border border-violet-200 bg-violet-50 p-3">
                     <p className="text-xs text-violet-700 font-semibold uppercase tracking-wide mb-2">Zugangstyp / Viggo</p>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                      {ACCESS_TYPES.map(type => {
-                        const active = accessDraft.typeId === type.id
+                {ACCESS_TYPES.map(type => {
+                  const active = accessDraft.typeId === type.id
                         const previewByGauge = {
                           '14G': viggo14gAsset,
                           '16G': viggo16gAsset,
@@ -2466,20 +2466,20 @@ export default function MaterialCartUI({ patient, onAction, savedState, onSaveSt
                           '20G': viggo20gAsset,
                           '22G': viggo22gAsset,
                         }
-                        return (
-                          <button
-                            key={type.id}
-                            onClick={() => setAccessDraft(prev => ({ ...prev, typeId: type.id, gauge: type.gauge }))}
+                  return (
+                    <button
+                      key={type.id}
+                      onClick={() => setAccessDraft(prev => ({ ...prev, typeId: type.id, gauge: type.gauge }))}
                             className={`rounded-xl border p-2 text-left transition ${active ? 'border-violet-500 ring-2 ring-violet-200 bg-white' : 'border-violet-200 bg-white hover:border-violet-400'}`}
-                          >
+                    >
                             <img src={previewByGauge[type.gauge]} alt={type.label} className="w-full h-16 object-contain mb-1" />
                             <p className="text-xs font-semibold text-surface-800">{type.label}</p>
                             <p className="text-[10px] text-surface-500">{type.hint}</p>
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
                   <div className="rounded-2xl border border-violet-200 bg-white p-3">
                     <p className="text-xs text-surface-600 mb-1">Auswahl</p>
                     <p className="text-sm font-semibold text-surface-900">
@@ -2500,19 +2500,19 @@ export default function MaterialCartUI({ patient, onAction, savedState, onSaveSt
                       style={{ transform: shouldMirrorArm ? 'scaleX(-1)' : 'none' }}
                       draggable={false}
                     />
-                    {ACCESS_SITES.map(site => {
+                  {ACCESS_SITES.map(site => {
                       const selected = accessDraft.siteId === site.id
                       const markerX = shouldMirrorArm ? (100 - site.x) : site.x
-                      return (
+                    return (
                         <div
-                          key={site.id}
+                        key={site.id}
                           style={{ left: `${markerX}%`, top: `${site.y}%` }}
                           className={`absolute z-10 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 pointer-events-none ${
-                            selected
+                          selected
                               ? 'bg-emerald-500 border-emerald-600 shadow-[0_0_0_4px_rgba(16,185,129,0.22)]'
                               : 'bg-white border-violet-300'
-                          }`}
-                          title={site.label}
+                        }`}
+                        title={site.label}
                         />
                       )
                     })}
@@ -2535,10 +2535,10 @@ export default function MaterialCartUI({ patient, onAction, savedState, onSaveSt
                           }`}
                         >
                           {site.label}
-                        </button>
-                      )
-                    })}
-                  </div>
+                      </button>
+                    )
+                  })}
+                </div>
                   <div className="mt-2 flex justify-end">
                     <button onClick={startAccessProcedure} className="btn-primary text-sm">
                       Minigame starten
@@ -2615,8 +2615,8 @@ export default function MaterialCartUI({ patient, onAction, savedState, onSaveSt
                   <p className="mt-2 text-xs text-surface-600 flex items-center gap-1.5">
                     <MousePointer2 className="w-3.5 h-3.5 text-violet-600" />
                     {accessHint || accessActiveInstruction}
-                  </p>
-                </div>
+                </p>
+              </div>
                 <div className="space-y-3">
                   <div className="rounded-2xl border border-surface-200 bg-white p-3">
                     <p className="text-xs font-semibold uppercase tracking-wide text-surface-700 mb-2">Tablett</p>
@@ -2636,11 +2636,11 @@ export default function MaterialCartUI({ patient, onAction, savedState, onSaveSt
                             <div>
                               <p className="text-xs font-semibold text-surface-800">{tool.label}</p>
                               <p className="text-[10px] text-surface-500">Zum Arm bewegen und klicken</p>
-                            </div>
-                          </button>
+            </div>
+              </button>
                         )
                       })}
-                    </div>
+            </div>
                     <button
                       onClick={finalizeAccessPlacement}
                       disabled={!accessProcedure.plasterDone || accessProcedure.tourniquetOn}

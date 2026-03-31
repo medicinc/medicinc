@@ -51,8 +51,8 @@ export async function requestDispatchReply({ eventTitle, eventContext = null, us
       signal,
     })
     const data = await res.json().catch(() => null)
-    if (!res.ok) return { ok: false, message: sanitize(data?.error?.message || 'AI Anfrage fehlgeschlagen') }
-    const text = sanitize(data?.choices?.[0]?.message?.content || '')
+    if (!res.ok) return { ok: false, message: sanitize(data?.error?.message || data?.message || 'AI Anfrage fehlgeschlagen') }
+    const text = sanitize(data?.text || '')
     if (!text) return { ok: false, message: 'Keine Antwort erhalten.' }
     return { ok: true, text }
   } catch (error) {
