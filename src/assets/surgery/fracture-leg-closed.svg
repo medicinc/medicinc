@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200">
+  <defs>
+    <linearGradient id="legSkinTone" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f5d8bf"/>
+      <stop offset="100%" stop-color="#d7a17f"/>
+    </linearGradient>
+    <radialGradient id="bruiseLeg" cx="50%" cy="50%" r="58%">
+      <stop offset="0%" stop-color="#7f1d1d" stop-opacity="0.42"/>
+      <stop offset="65%" stop-color="#7f1d1d" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#7f1d1d" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="320" height="200" rx="20" fill="#f4eee9"/>
+  <path d="M30 100 C35 70, 62 50, 100 50 H220 C258 50, 285 70, 290 100 C285 130, 258 150, 220 150 H100 C62 150, 35 130, 30 100 Z" fill="url(#legSkinTone)" stroke="#b97850" stroke-width="3"/>
+  <ellipse cx="162" cy="74" rx="106" ry="12" fill="#fce8d6" opacity="0.6"/>
+  <ellipse cx="162" cy="132" rx="112" ry="14" fill="#a86f4d" opacity="0.2"/>
+  <path d="M76 103 C104 101, 126 100, 145 102 C156 103, 166 95, 176 90 C184 86, 194 89, 203 98 C216 110, 235 111, 252 104" fill="none" stroke="#87573a" stroke-width="2.8" stroke-linecap="round"/>
+  <ellipse cx="178" cy="103" rx="54" ry="23" fill="url(#bruiseLeg)"/>
+  <ellipse cx="174" cy="92" rx="22" ry="10" fill="#fca5a5" opacity="0.34"/>
+  <path d="M154 98 C163 92, 171 89, 179 91 C189 94, 198 102, 207 109" fill="none" stroke="#6b1a1a" stroke-width="1.9" stroke-linecap="round" opacity="0.68"/>
+  <path d="M164 86 C172 83, 183 84, 191 89" fill="none" stroke="#7f1d1d" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+</svg>

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200">
+  <defs>
+    <linearGradient id="legSkinOpenTone" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f6dac2"/>
+      <stop offset="100%" stop-color="#d59d79"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="200" rx="20" fill="#f4eeea"/>
+  <rect x="30" y="48" width="260" height="104" rx="30" fill="url(#legSkinOpenTone)" stroke="#b97850" stroke-width="3"/>
+  <ellipse cx="162" cy="74" rx="106" ry="12" fill="#fce8d6" opacity="0.62"/>
+  <ellipse cx="162" cy="132" rx="112" ry="14" fill="#a86f4d" opacity="0.2"/>
+
+  <path d="M88 104 L136 104" stroke="#fbfaf8" stroke-width="12" stroke-linecap="round"/>
+  <path d="M174 104 L222 100" stroke="#fbfaf8" stroke-width="12" stroke-linecap="round"/>
+  <path d="M88 104 L136 104" stroke="#b4b4b4" stroke-width="2.3" stroke-linecap="round"/>
+  <path d="M174 104 L222 100" stroke="#b4b4b4" stroke-width="2.3" stroke-linecap="round"/>
+  <path d="M96 104 L131 104" stroke="#ebe5dd" stroke-width="4.3" stroke-linecap="round"/>
+  <path d="M180 104 L214 101.2" stroke="#ebe5dd" stroke-width="4.3" stroke-linecap="round"/>
+
+  <path d="M136 104 L160 82 L184 126 L208 98" stroke="#691717" stroke-width="4.4" stroke-linecap="round" fill="none"/>
+  <path d="M154 88 L188 120" stroke="#7f1d1d" stroke-width="11" stroke-linecap="round" opacity="0.8"/>
+  <path d="M152 92 L186 118" stroke="#a81c1c" stroke-width="6.6" stroke-linecap="round" opacity="0.95"/>
+  <circle cx="170" cy="103" r="8.2" fill="#991b1b"/>
+  <circle cx="187" cy="95" r="5.2" fill="#7f1d1d"/>
+  <ellipse cx="172" cy="108" rx="38" ry="17" fill="#7f1d1d" opacity="0.18"/>
+</svg>

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 160">
+  <defs>
+    <radialGradient id="skinHeadS3" cx="45%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#fde68a"/>
+      <stop offset="100%" stop-color="#fbbf24"/>
+    </radialGradient>
+  </defs>
+  <rect width="300" height="160" rx="16" fill="#fff7ed"/>
+  <ellipse cx="150" cy="80" rx="92" ry="54" fill="url(#skinHeadS3)" stroke="#f59e0b" stroke-width="4"/>
+  <ellipse cx="165" cy="68" rx="24" ry="10" fill="#7c3aed" opacity="0.08"/>
+  <path d="M115 79 C132 73, 148 86, 162 79 C176 73, 191 85, 203 79" fill="none" stroke="#be123c" stroke-width="2" stroke-linecap="round" opacity="0.56"/>
+</svg>

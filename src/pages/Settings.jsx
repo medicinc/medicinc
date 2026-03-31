@@ -1,0 +1,181 @@
+import { useState } from 'react'
+import { useAuth } from '../context/AuthContext'
+import { Save, Settings as SettingsIcon, Check, RotateCcw, Shield, Download, Trash2 } from 'lucide-react'
+import { exportUserDataBundle } from '../services/profileService'
+import { requestSupabaseDsarDelete, requestSupabaseDsarExport } from '../services/dsarService'
+
+export default function Settings() {
+  const { user, updateUser, deleteUserAccountData } = useAuth()
+  const [textBlocks, setTextBlocks] = useState(Array.isArray(user?.documentTextBlocks) ? user.documentTextBlocks.join('\n') : '')
+  const [saved, setSaved] = useState(false)
+  const [tutorialResetInfo, setTutorialResetInfo] = useState('')
+  const [privacyInfo, setPrivacyInfo] = useState('')
+  const [deleteConfirm, setDeleteConfirm] = useState('')
+  const [aiConsent, setAiConsent] = useState(() => {
+    try { return localStorage.getItem('medisim_ai_consent') === 'granted' } catch { return false }
+  })
+  const [reducedIntensity, setReducedIntensity] = useState(() => {
+    try { return localStorage.getItem('medisim_content_intensity') === 'reduced' } catch { return false }
+  })
+
+  const saveSettings = async () => {
+    const nextBlocks = String(textBlocks || '')
+      .split('\n')
+      .map(s => s.trim())
+      .filter(Boolean)
+      .slice(0, 60)
+    await updateUser({ documentTextBlocks: nextBlocks })
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2200)
+  }
+
+  const restartHospitalTutorial = () => {
+    const userId = user?.id
+    const hospitalId = user?.hospitalId
+    if (!userId || !hospitalId) {
+      setTutorialResetInfo('Tutorial kann erst nach Krankenhausbeitritt neu gestartet werden.')
+      setTimeout(() => setTutorialResetInfo(''), 2600)
+      return
+    }
+    const doneKey = `medisim_hospital_tutorial_done_${userId}_${hospitalId}`
+    const forceKey = `medisim_hospital_tutorial_force_${userId}_${hospitalId}`
+    localStorage.removeItem(doneKey)
+    localStorage.setItem(forceKey, '1')
+    setTutorialResetInfo('Tutorial wird beim nächsten Öffnen der Krankenhausseite erneut gestartet.')
+    setTimeout(() => setTutorialResetInfo(''), 2800)
+  }
+
+  const savePrivacyPreferences = () => {
+    try {
+      localStorage.setItem('medisim_ai_consent', aiConsent ? 'granted' : 'denied')
+      localStorage.setItem('medisim_content_intensity', reducedIntensity ? 'reduced' : 'default')
+      setPrivacyInfo('Datenschutz- und Jugendschutz-Präferenzen gespeichert.')
+      setTimeout(() => setPrivacyInfo(''), 2600)
+    } catch {
+      setPrivacyInfo('Speichern nicht möglich (Storage blockiert).')
+      setTimeout(() => setPrivacyInfo(''), 2600)
+    }
+  }
+
+  const exportData = async () => {
+    const remote = await requestSupabaseDsarExport(user)
+    const local = await exportUserDataBundle(user)
+    const bundle = {
+      source: remote.ok ? 'supabase+local' : 'local-only',
+      remote: remote.ok ? remote.data : { message: remote.message || 'Kein Supabase-Export verfügbar.' },
+      local: local.data,
+    }
+    const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `medisim-dsar-export-${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+    setPrivacyInfo(remote.ok ? 'Export erstellt (Supabase + lokal).' : 'Export erstellt (lokale Daten).')
+    setTimeout(() => setPrivacyInfo(''), 3200)
+  }
+
+  const deleteData = async () => {
+    if (deleteConfirm !== 'LÖSCHEN') {
+      setPrivacyInfo('Bitte zur Bestätigung exakt "LÖSCHEN" eingeben.')
+      setTimeout(() => setPrivacyInfo(''), 3200)
+      return
+    }
+    const remote = await requestSupabaseDsarDelete(user)
+    await deleteUserAccountData()
+    setPrivacyInfo(remote.ok ? 'Konto-/Lokaldaten gelöscht. Bitte neu anmelden.' : 'Lokaldaten gelöscht. Supabase-Löschung später ausführen.')
+  }
+
+  return (
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-primary-100 text-primary-700 flex items-center justify-center">
+          <SettingsIcon className="w-5 h-5" />
+        </div>
+        <div>
+          <h1 className="font-display text-3xl font-bold text-surface-900">Einstellungen</h1>
+          <p className="text-sm text-surface-500">Persönliche Dokument-Textbausteine verwalten</p>
+        </div>
+      </div>
+
+      {saved && (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 flex items-center gap-2 text-emerald-700 text-sm">
+          <Check className="w-4 h-4" />
+          Einstellungen gespeichert.
+        </div>
+      )}
+      {tutorialResetInfo && (
+        <div className="rounded-xl border border-primary-200 bg-primary-50 px-4 py-3 flex items-center gap-2 text-primary-700 text-sm">
+          <Check className="w-4 h-4" />
+          {tutorialResetInfo}
+        </div>
+      )}
+      {privacyInfo && (
+        <div className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 flex items-center gap-2 text-indigo-700 text-sm">
+          <Check className="w-4 h-4" />
+          {privacyInfo}
+        </div>
+      )}
+
+      <div className="card p-6 space-y-3">
+        <h2 className="font-semibold text-surface-900">Textbausteine</h2>
+        <p className="text-sm text-surface-500">
+          Eine Zeile entspricht einem Textbaustein. Diese Bausteine erscheinen im Dokumente-Tab im Textbaustein-Popup.
+        </p>
+        <textarea
+          value={textBlocks}
+          onChange={(e) => setTextBlocks(e.target.value)}
+          className="input-field min-h-[240px] resize-y"
+          placeholder="z. B. Klinisch stabil, kreislaufkompensiert."
+        />
+        <div className="flex justify-end">
+          <button onClick={saveSettings} className="btn-primary">
+            <Save className="w-4 h-4" /> Speichern
+          </button>
+        </div>
+      </div>
+
+      <div className="card p-6 space-y-3">
+        <h2 className="font-semibold text-surface-900">Tutorial</h2>
+        <p className="text-sm text-surface-500">
+          Starte das interaktive Einsteiger-Tutorial erneut. Es wird auf der Krankenhausseite als Guide-Box angezeigt.
+        </p>
+        <div className="flex justify-end">
+          <button onClick={restartHospitalTutorial} className="btn-secondary">
+            <RotateCcw className="w-4 h-4" /> Tutorial neu starten
+          </button>
+        </div>
+      </div>
+
+      <div className="card p-6 space-y-4">
+        <h2 className="font-semibold text-surface-900 flex items-center gap-2">
+          <Shield className="w-4 h-4 text-indigo-600" /> Datenschutz & Rechte (DSAR)
+        </h2>
+        <p className="text-sm text-surface-500">
+          Diese Funktionen sind publish-ready vorbereitet: lokaler Export/Löschung funktionieren sofort, Supabase-Endpunkte werden bei Deployment genutzt.
+        </p>
+        <label className="flex items-start gap-3 text-sm text-surface-700">
+          <input type="checkbox" checked={aiConsent} onChange={(e) => setAiConsent(e.target.checked)} className="mt-0.5" />
+          <span>Einwilligung für AI-Simulationsdialoge (über Supabase-Proxy) erteilen.</span>
+        </label>
+        <label className="flex items-start gap-3 text-sm text-surface-700">
+          <input type="checkbox" checked={reducedIntensity} onChange={(e) => setReducedIntensity(e.target.checked)} className="mt-0.5" />
+          <span>Reduzierte Intensität für medizinische Beschreibungen aktivieren (Jugendschutz-Option).</span>
+        </label>
+        <div className="flex flex-wrap gap-2">
+          <button onClick={savePrivacyPreferences} className="btn-secondary">Präferenzen speichern</button>
+          <button onClick={exportData} className="btn-secondary"><Download className="w-4 h-4" /> Datenexport (JSON)</button>
+        </div>
+        <div className="rounded-xl border border-red-200 bg-red-50 p-3 space-y-2">
+          <p className="text-sm text-red-700 font-medium">Konto-/Profildaten löschen</p>
+          <p className="text-xs text-red-600">Zur Bestätigung bitte LÖSCHEN eingeben.</p>
+          <div className="flex gap-2">
+            <input value={deleteConfirm} onChange={(e) => setDeleteConfirm(e.target.value)} className="input-field" placeholder="LÖSCHEN" />
+            <button onClick={deleteData} className="btn-secondary text-red-700 border-red-300"><Trash2 className="w-4 h-4" /> Löschen</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

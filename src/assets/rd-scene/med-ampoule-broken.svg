@@ -1,0 +1,25 @@
+<svg width="220" height="300" viewBox="0 0 220 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="amberBodyB" x1="90" y1="40" x2="90" y2="260" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#D08A2D"/>
+      <stop offset="1" stop-color="#7F3C11"/>
+    </linearGradient>
+    <linearGradient id="amberGlassB" x1="50" y1="74" x2="132" y2="244" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F5C57D" stop-opacity="0.78"/>
+      <stop offset="1" stop-color="#7D3A12" stop-opacity="0.34"/>
+    </linearGradient>
+  </defs>
+  <path d="M34 96C34 74 52 56 74 56H106C128 56 146 74 146 96V194C146 229 123 259 90 269C57 259 34 229 34 194V96Z" fill="url(#amberBodyB)" stroke="#5B2A0D" stroke-width="5"/>
+  <path d="M46 102C46 86 58 74 74 74H106C122 74 134 86 134 102V192C134 218 117 241 90 250C63 241 46 218 46 192V102Z" fill="url(#amberGlassB)"/>
+  <path d="M57 132C57 126 62 121 67 121H113C118 121 123 126 123 132V204C123 210 118 215 113 215H67C62 215 57 210 57 204V132Z" fill="#B26124" opacity="0.27"/>
+  <ellipse cx="90" cy="114" rx="35" ry="6" fill="#E8B065" opacity="0.6"/>
+  <path d="M56 112C64 116 73 118 90 118C107 118 116 116 124 112" stroke="#F2D7A8" stroke-width="2.6" stroke-linecap="round" opacity="0.74"/>
+  <path d="M73 56L82 41L91 53L99 39L108 55" stroke="#5B2A0D" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M72 58H108" stroke="#5B2A0D" stroke-width="6" stroke-linecap="round"/>
+  <path d="M68 258H112L106 285H74L68 258Z" fill="#B46223" stroke="#5B2A0D" stroke-width="5"/>
+  <rect x="70" y="270" width="40" height="24" rx="8" fill="#C8772E" stroke="#5B2A0D" stroke-width="4"/>
+  <path d="M160 28L173 14L187 30L175 45L160 28Z" fill="#D89239" stroke="#5B2A0D" stroke-width="4"/>
+  <path d="M169 43L182 49" stroke="#5B2A0D" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="156" cy="54" r="3.5" fill="#A85A20"/>
+  <circle cx="145" cy="64" r="2.5" fill="#A85A20"/>
+</svg>

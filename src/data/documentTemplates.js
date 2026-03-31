@@ -1,0 +1,173 @@
+export const DOCUMENT_TEMPLATES = [
+  {
+    id: 'triageprotokoll',
+    label: 'Triageprotokoll (auto)',
+    color: 'indigo',
+    fields: [
+      { id: 'aufnahmeart', label: 'Aufnahmeart', type: 'text', required: true },
+      { id: 'triagestufe', label: 'Triagestufe', type: 'text', required: true },
+      { id: 'hauptbeschwerde', label: 'Hauptbeschwerde', type: 'textarea', required: true },
+      { id: 'schmerzscore', label: 'Schmerzscore', type: 'text', required: false },
+      { id: 'vitalstatus', label: 'Vitalstatus', type: 'textarea', required: true },
+      { id: 'triage_notiz', label: 'Triage-Notiz', type: 'textarea', required: false },
+      { id: 'triage_befunde', label: 'Triage-Befunde', type: 'textarea', required: false },
+    ],
+    textBlocks: [],
+  },
+  {
+    id: 'rtw_protokoll',
+    label: 'RTW-Protokoll (auto)',
+    color: 'emerald',
+    fields: [
+      { id: 'rettungsmittel', label: 'Rettungsmittel', type: 'text', required: true },
+      { id: 'einsatznummer', label: 'Fahrzeug / Einsatzkennung', type: 'text', required: false },
+      { id: 'einsatzzeit', label: 'Einsatzzeit / Übergabezeit', type: 'text', required: false },
+      { id: 'einsatzort', label: 'Einsatzort', type: 'text', required: false },
+      { id: 'einsatzmeldung', label: 'Einsatzmeldung', type: 'textarea', required: true },
+      { id: 'erstbefund', label: 'Erstbefund am Einsatzort', type: 'textarea', required: false },
+      { id: 'anamnese', label: 'Präklinische Anamnese', type: 'textarea', required: false },
+      { id: 'vitalstatus', label: 'Präklinische Vitalparameter', type: 'textarea', required: true },
+      { id: 'monitoring', label: 'Monitoring / Verlauf unterwegs', type: 'textarea', required: false },
+      { id: 'massnahmen', label: 'Präklinische Maßnahmen', type: 'textarea', required: true },
+      { id: 'medikation', label: 'Präklinische Medikation', type: 'textarea', required: false },
+      { id: 'uebergabe', label: 'Übergabe in der ZNA', type: 'textarea', required: true },
+    ],
+    textBlocks: [],
+  },
+  {
+    id: 'aufnahmebogen',
+    label: 'Aufnahmebogen',
+    color: 'blue',
+    fields: [
+      { id: 'anamnese', label: 'Anamnese', type: 'textarea', required: true },
+      { id: 'aufnahmebefund', label: 'Aufnahmebefund', type: 'textarea', required: true },
+      { id: 'verdachtsdiagnose', label: 'Verdachtsdiagnose', type: 'text', required: true },
+      { id: 'plan', label: 'Initialer Plan', type: 'textarea', required: true },
+    ],
+    textBlocks: [
+      'Patient wach, orientiert, kooperativ.',
+      'ABCDE stabil, aktuell keine akute Reanimationspflichtigkeit.',
+      'Aufnahme zur weiteren Diagnostik und Verlaufskontrolle.',
+    ],
+  },
+  {
+    id: 'ambulanzbogen',
+    label: 'Ambulanzbogen',
+    color: 'emerald',
+    fields: [
+      { id: 'zna_anlass', label: 'Vorstellungsanlass in der ZNA', type: 'textarea', required: true },
+      { id: 'triage', label: 'Triage / ESI', type: 'text', required: true },
+      { id: 'vitalstatus', label: 'Vitalstatus bei Aufnahme', type: 'textarea', required: true },
+      { id: 'kurzanamnese', label: 'Kurzanamnese (SAMPLER)', type: 'textarea', required: true },
+      { id: 'sofortmassnahmen', label: 'Sofortmaßnahmen in der ZNA', type: 'textarea', required: true },
+      { id: 'entscheidung', label: 'Disposition / weiteres Vorgehen', type: 'textarea', required: true },
+    ],
+    textBlocks: [
+      'Vorstellung als ambulanter ZNA-Fall, initial kreislaufstabil.',
+      'Triage nach ESI dokumentiert, priorisierte Diagnostik eingeleitet.',
+      'Schmerz- und Symptomkontrolle in der Notaufnahme begonnen.',
+      'Bei klinischer Verschlechterung sofortige stationäre Aufnahme vorgesehen.',
+    ],
+  },
+  {
+    id: 'rezept',
+    label: 'Rezept',
+    color: 'violet',
+    fields: [
+      { id: 'medikament', label: 'Medikament', type: 'text', required: true },
+      { id: 'dosierung', label: 'Dosierung', type: 'text', required: true },
+      { id: 'einnahme', label: 'Einnahmehinweise', type: 'textarea', required: true },
+      { id: 'dauer', label: 'Therapiedauer', type: 'text', required: false },
+    ],
+    textBlocks: [
+      '1-0-1 nach den Mahlzeiten.',
+      'Bei Unverträglichkeit Rücksprache mit Hausarzt.',
+      'Bedarfsmedikation bei Schmerzen möglich.',
+    ],
+  },
+  {
+    id: 'entlassungsbogen',
+    label: 'Entlassungsbogen',
+    color: 'teal',
+    fields: [
+      { id: 'diagnosen', label: 'Entlassdiagnosen', type: 'textarea', required: true },
+      { id: 'verlauf', label: 'Klinischer Verlauf', type: 'textarea', required: true },
+      { id: 'medikation', label: 'Medikation bei Entlassung', type: 'textarea', required: true },
+      { id: 'nachsorge', label: 'Nachsorgeempfehlung', type: 'textarea', required: true },
+    ],
+    textBlocks: [
+      'Klinisch stabil und kreislaufkompensiert.',
+      'Ambulante hausärztliche Kontrolle innerhalb von 48h empfohlen.',
+      'Vorstellung bei Verschlechterung umgehend über Notaufnahme.',
+    ],
+  },
+  {
+    id: 'psychiatrie_einweisung',
+    label: 'Psychiatrie-Einweisung',
+    color: 'indigo',
+    fields: [
+      { id: 'einweisungsgrund', label: 'Einweisungsgrund', type: 'textarea', required: true },
+      { id: 'psych_status', label: 'Psychischer Befund', type: 'textarea', required: true },
+      { id: 'eigenfremdgef', label: 'Eigen-/Fremdgefährdung', type: 'textarea', required: true },
+      { id: 'somatik', label: 'Somatischer Ausschluss (kurz)', type: 'textarea', required: true },
+      { id: 'transportmodus', label: 'Transportmodus', type: 'text', required: false },
+    ],
+    textBlocks: [
+      'Patient zeigt anhaltend psychotisch/aggressives Verhalten trotz Deeskalation.',
+      'Aktuell keine vitale Bedrohung, somatische Notfallindikation ausgeschlossen.',
+      'Verlegung in psychiatrische Weiterbehandlung nach Aufklärung eingeleitet.',
+    ],
+  },
+  {
+    id: 'totenschein',
+    label: 'Totenschein',
+    color: 'slate',
+    fields: [
+      { id: 'todeszeit', label: 'Todeszeitpunkt', type: 'text', required: true },
+      { id: 'ursache', label: 'Vermutete Todesursache', type: 'textarea', required: true },
+      { id: 'kette', label: 'Kausalkette', type: 'textarea', required: false },
+      { id: 'bemerkungen', label: 'Bemerkungen', type: 'textarea', required: false },
+    ],
+    textBlocks: [
+      'Kein Hinweis auf Fremdeinwirkung in der klinischen Untersuchung.',
+      'Leichenschau vollständig dokumentiert.',
+      'Meldung gemäß lokalen Vorgaben erfolgt.',
+    ],
+  },
+  {
+    id: 'ekg_befund',
+    label: 'EKG-Befund',
+    color: 'emerald',
+    fields: [
+      { id: 'beurteilung', label: 'Beurteilung', type: 'textarea', required: true },
+      { id: 'verdachtsdiagnose', label: 'Verdachtsdiagnose', type: 'text', required: true },
+      { id: 'rhythmus', label: 'Rhythmus', type: 'text', required: false },
+      { id: 'frequenz', label: 'Frequenz', type: 'text', required: false },
+      { id: 'pq_zeit', label: 'PQ-Zeit', type: 'text', required: false },
+      { id: 'qrs_zeit', label: 'QRS-Zeit', type: 'text', required: false },
+      { id: 'qt_zeit', label: 'QT-Zeit', type: 'text', required: false },
+      { id: 'qtc_zeit', label: 'QTc-Zeit', type: 'text', required: false },
+    ],
+    textBlocks: [
+      'Sinusrhythmus, normofrequent.',
+      'Kein Hinweis auf akute Ischämie.',
+      'ST-Hebungen vereinbar mit STEMI, sofortige HKL-Indikation.',
+    ],
+  },
+  {
+    id: 'surgical_bericht',
+    label: 'Chirurgischer Versorgungsbericht',
+    color: 'amber',
+    fields: [
+      { id: 'region', label: 'Betroffene Region', type: 'text', required: true },
+      { id: 'indikation', label: 'Indikation', type: 'textarea', required: true },
+      { id: 'massnahmen', label: 'Durchgeführte Maßnahmen', type: 'textarea', required: true },
+      { id: 'beurteilung', label: 'Beurteilung', type: 'textarea', required: true },
+    ],
+    textBlocks: [],
+  },
+]
+
+export function getDocumentTemplate(templateId) {
+  return DOCUMENT_TEMPLATES.find(t => t.id === templateId) || null
+}

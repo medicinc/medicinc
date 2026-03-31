@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect x="18" y="8" width="28" height="48" rx="4" fill="#e5e7eb" stroke="#d1d5db"/>
+  <circle cx="32" cy="24" r="8" fill="#22c55e" stroke="#16a34a"/>
+  <circle cx="32" cy="24" r="4" fill="#166534"/>
+  <text x="26" y="26" font-size="5" fill="#fff" font-weight="700">O2</text>
+  <rect x="26" y="36" width="12" height="16" rx="2" fill="white" stroke="#d1d5db" stroke-width=".5"/>
+  <circle cx="32" cy="44" r="2" fill="#22c55e"/>
+</svg>

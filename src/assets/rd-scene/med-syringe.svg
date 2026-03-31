@@ -1,0 +1,18 @@
+<svg width="300" height="140" viewBox="0 0 300 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="barrelGrad" x1="70" y1="46" x2="250" y2="46" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F8FCFF"/>
+      <stop offset="1" stop-color="#CFE9FF"/>
+    </linearGradient>
+  </defs>
+  <rect x="14" y="40" width="54" height="12" rx="6" fill="#D2E9FF" stroke="#215C9B" stroke-width="4"/>
+  <rect x="66" y="28" width="14" height="36" rx="7" fill="#E8F6FF" stroke="#215C9B" stroke-width="4"/>
+  <rect x="78" y="16" width="150" height="60" rx="12" fill="url(#barrelGrad)" stroke="#215C9B" stroke-width="4"/>
+  <rect x="95" y="29" width="96" height="34" rx="8" fill="#A3D4FF" opacity="0.5"/>
+  <path d="M102 46H206" stroke="#5EA8E2" stroke-width="3" stroke-linecap="round"/>
+  <path d="M118 22V70M138 22V70M158 22V70M178 22V70" stroke="#7CB8E8" stroke-width="2" opacity="0.9"/>
+  <rect x="224" y="28" width="20" height="36" rx="8" fill="#DCEFFF" stroke="#215C9B" stroke-width="4"/>
+  <rect x="242" y="38" width="34" height="16" rx="8" fill="#E9F6FF" stroke="#215C9B" stroke-width="4"/>
+  <path d="M276 46H290" stroke="#215C9B" stroke-width="4" stroke-linecap="round"/>
+  <path d="M290 46L298 44V48L290 46Z" fill="#215C9B"/>
+</svg>

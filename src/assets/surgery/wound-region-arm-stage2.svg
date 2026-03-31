@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 160">
+  <defs>
+    <linearGradient id="skinArmS2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#dbeafe"/>
+      <stop offset="100%" stop-color="#93c5fd"/>
+    </linearGradient>
+  </defs>
+  <rect width="300" height="160" rx="16" fill="#eff6ff"/>
+  <rect x="36" y="42" width="228" height="76" rx="34" fill="url(#skinArmS2)" stroke="#60a5fa" stroke-width="4"/>
+  <path d="M104 82 C122 73, 138 90, 154 82 C170 74, 186 89, 202 82" fill="none" stroke="#b91c1c" stroke-width="3.4" stroke-linecap="round"/>
+  <path d="M108 82 C124 75, 139 89, 154 83 C168 76, 184 88, 200 83" fill="none" stroke="#fb7185" stroke-width="1.5" stroke-linecap="round" opacity="0.68"/>
+</svg>

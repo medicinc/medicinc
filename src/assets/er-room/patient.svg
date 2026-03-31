@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 420">
+  <!-- blanket -->
+  <rect x="44" y="180" width="232" height="206" rx="34" fill="#0f9995"/>
+  <rect x="44" y="180" width="232" height="14" rx="7" fill="#12b7ac"/>
+  <!-- torso -->
+  <path d="M118 132q42-16 84 0v72h-84z" fill="#805bb8"/>
+  <path d="M126 136q34-12 68 0v10q-34-8-68 0z" fill="#8e6dc5" opacity=".75"/>
+  <!-- neck -->
+  <rect x="152" y="112" width="16" height="22" rx="6" fill="#efbf97"/>
+  <!-- head -->
+  <ellipse cx="160" cy="78" rx="40" ry="45" fill="#efbf97"/>
+  <!-- hair -->
+  <path d="M120 82q2-58 40-58t40 58q-10-22-40-22t-40 22z" fill="#c65a0b"/>
+  <path d="M122 84q4 26 14 42" fill="none" stroke="#b45309" stroke-width="6" stroke-linecap="round"/>
+  <path d="M198 84q-4 26-14 42" fill="none" stroke="#b45309" stroke-width="6" stroke-linecap="round"/>
+  <!-- face -->
+  <circle cx="146" cy="82" r="3.2" fill="#2563eb"/>
+  <circle cx="174" cy="82" r="3.2" fill="#2563eb"/>
+  <path d="M148 102q12 10 24 0" fill="none" stroke="#a66b4a" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M158 88q2 5 0 10" fill="none" stroke="#d39b72" stroke-width="1.8"/>
+  <!-- shoulders and arms -->
+  <path d="M112 144q-18 12-28 32v74h26z" fill="#efbf97"/>
+  <path d="M208 144q18 12 28 32v74h-26z" fill="#efbf97"/>
+  <!-- arm shadows -->
+  <path d="M96 184q8 10 8 26v34" fill="none" stroke="#d8a37c" stroke-width="3" opacity=".5"/>
+  <path d="M224 184q-8 10-8 26v34" fill="none" stroke="#d8a37c" stroke-width="3" opacity=".5"/>
+</svg>

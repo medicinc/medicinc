@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760">
+  <rect width="1200" height="760" fill="#c7d6dc"/>
+  <rect y="520" width="1200" height="80" fill="#c8c8cc"/>
+  <rect y="600" width="1200" height="160" fill="#e6e8ea"/>
+  <g opacity=".45">
+    <defs>
+      <pattern id="grid" width="16" height="16" patternUnits="userSpaceOnUse">
+        <path d="M16 0H0v16" fill="none" stroke="#d6d8dc" stroke-width="1"/>
+      </pattern>
+    </defs>
+    <rect y="600" width="1200" height="160" fill="url(#grid)"/>
+  </g>
+  <g transform="translate(70,45)">
+    <rect width="360" height="150" rx="4" fill="#f6f7f8" stroke="#b7bfc6"/>
+    <rect width="360" height="32" fill="#159ca1"/>
+    <line x1="180" y1="32" x2="180" y2="150" stroke="#d7dde2"/>
+    <line x1="180" y1="70" x2="360" y2="70" stroke="#c3c9cf"/>
+    <line x1="180" y1="108" x2="360" y2="108" stroke="#c3c9cf"/>
+  </g>
+  <g transform="translate(920,180)">
+    <rect x="26" y="10" width="100" height="56" rx="3" fill="#1f2937" stroke="#9ca3af"/>
+    <rect x="38" y="18" width="76" height="40" fill="#0d1b2a"/>
+    <rect x="0" y="56" width="120" height="66" rx="4" fill="#64cad1" stroke="#3a9ea6"/>
+    <rect x="12" y="68" width="96" height="42" fill="#071a24"/>
+    <rect x="16" y="122" width="120" height="52" rx="3" fill="#d9dbde" stroke="#b5bbc2"/>
+  </g>
+</svg>

@@ -1,0 +1,145 @@
+export const WORKER_TYPES = [
+  {
+    id: 'pflegefachkraft',
+    name: 'Pflegefachkraft',
+    description: 'Übernimmt Grundpflege, Vitalzeichen und Patientenbetreuung',
+    icon: 'Heart',
+    color: 'from-pink-500 to-pink-600',
+    costPerDay: 150,
+    hireCost: 500,
+    autoTasks: [
+      { id: 'vitals', name: 'Vitalzeichen erfassen', intervalMin: 5, description: 'Regelmäßige Kontrolle von Puls, Blutdruck, Temperatur' },
+      { id: 'care', name: 'Grundpflege', intervalMin: 15, description: 'Patientenpflege, Lagerung und Betreuung' },
+      { id: 'meds', name: 'Medikamente verabreichen', intervalMin: 10, description: 'Verordnete Medikamente ausgeben und dokumentieren' },
+    ],
+  },
+  {
+    id: 'techniker',
+    name: 'Medizintechniker',
+    description: 'Wartet und repariert medizinische Geräte und Einrichtungen',
+    icon: 'Wrench',
+    color: 'from-orange-500 to-orange-600',
+    costPerDay: 120,
+    hireCost: 400,
+    autoTasks: [
+      { id: 'maintenance', name: 'Gerätewartung', intervalMin: 30, description: 'Regelmäßige Wartung aller medizinischen Geräte' },
+      { id: 'repair', name: 'Reparaturen', intervalMin: 60, description: 'Defekte Geräte reparieren' },
+    ],
+  },
+  {
+    id: 'mta',
+    name: 'MTA (Med.-techn. Assistent*in)',
+    description: 'Führt Laboruntersuchungen durch und bearbeitet Proben',
+    icon: 'FlaskConical',
+    color: 'from-emerald-500 to-emerald-600',
+    costPerDay: 140,
+    hireCost: 600,
+    autoTasks: [
+      { id: 'labwork', name: 'Laborproben bearbeiten', intervalMin: 8, description: 'Blutbilder, Urinanalysen und weitere Laborwerte erstellen' },
+      { id: 'results', name: 'Befunde erstellen', intervalMin: 10, description: 'Laborergebnisse dokumentieren und bereitstellen' },
+    ],
+  },
+  {
+    id: 'radiologietechnolog',
+    name: 'Radiologietechnolog*in',
+    description: 'Bedient Röntgen-, CT- und MRT-Geräte',
+    icon: 'Scan',
+    color: 'from-indigo-500 to-indigo-600',
+    costPerDay: 160,
+    hireCost: 700,
+    autoTasks: [
+      { id: 'imaging', name: 'Bildgebung durchführen', intervalMin: 12, description: 'Röntgen, CT oder MRT Untersuchungen durchführen' },
+    ],
+  },
+  {
+    id: 'reinigungskraft',
+    name: 'Reinigungskraft',
+    description: 'Hält Räume sauber und sorgt für Hygiene',
+    icon: 'Sparkles',
+    color: 'from-sky-500 to-sky-600',
+    costPerDay: 80,
+    hireCost: 200,
+    autoTasks: [
+      { id: 'clean', name: 'Räume reinigen', intervalMin: 20, description: 'Desinfektion und Reinigung aller Räumlichkeiten' },
+    ],
+  },
+  {
+    id: 'triagekraft',
+    name: 'Triagekraft',
+    description: 'Kategorisiert eingehende Patienten nach Dringlichkeit',
+    icon: 'ClipboardList',
+    color: 'from-red-500 to-red-600',
+    costPerDay: 130,
+    hireCost: 500,
+    autoTasks: [
+      { id: 'triage', name: 'Patienten-Triage', intervalMin: 2, description: 'Automatische Ersteinschätzung und Kategorisierung neuer Patienten' },
+      { id: 'firstvitals', name: 'Erstvitalzeichen', intervalMin: 3, description: 'Erste Vitalzeichen bei Aufnahme erfassen' },
+    ],
+  },
+  {
+    id: 'rettungssanitaeter',
+    name: 'Rettungssanitäter*in',
+    description: 'Nimmt Ambulanz-Patienten entgegen und führt Übergabe durch',
+    icon: 'Siren',
+    color: 'from-red-600 to-red-700',
+    costPerDay: 140,
+    hireCost: 500,
+    autoTasks: [
+      { id: 'ambulance', name: 'Ambulanz-Übergabe', intervalMin: 5, description: 'Professionelle Übernahme von Rettungsdienst-Patienten' },
+    ],
+  },
+  {
+    id: 'pharmazeut',
+    name: 'Apotheker*in',
+    description: 'Verwaltet Medikamentenvorrat und prüft Verordnungen',
+    icon: 'Pill',
+    color: 'from-violet-500 to-violet-600',
+    costPerDay: 170,
+    hireCost: 800,
+    autoTasks: [
+      { id: 'dispense', name: 'Medikamente ausgeben', intervalMin: 8, description: 'Medikamente vorbereiten und Wechselwirkungen prüfen' },
+      { id: 'inventory', name: 'Bestand prüfen', intervalMin: 30, description: 'Medikamentenvorrat kontrollieren und nachbestellen' },
+    ],
+  },
+  {
+    id: 'physiotherapeut',
+    name: 'Physiotherapeut*in',
+    description: 'Mobilisiert Patienten und führt Rehabilitationsmaßnahmen durch',
+    icon: 'Dumbbell',
+    color: 'from-lime-500 to-lime-600',
+    costPerDay: 130,
+    hireCost: 500,
+    autoTasks: [
+      { id: 'mobilize', name: 'Patienten mobilisieren', intervalMin: 15, description: 'Frührehabilitation und Bewegungstherapie' },
+    ],
+  },
+  {
+    id: 'sozialarbeiter',
+    name: 'Sozialarbeiter*in',
+    description: 'Koordiniert Entlassung und soziale Unterstützung',
+    icon: 'Users',
+    color: 'from-amber-500 to-amber-600',
+    costPerDay: 110,
+    hireCost: 400,
+    autoTasks: [
+      { id: 'discharge', name: 'Entlassmanagement', intervalMin: 30, description: 'Entlassungsplanung und Nachsorge organisieren' },
+    ],
+  },
+  {
+    id: 'sicherheitsdienst',
+    name: 'Sicherheitsdienst',
+    description: 'Deeskaliert bei auffälligen Patient*innen und schützt Personal/Material',
+    icon: 'Shield',
+    color: 'from-slate-600 to-slate-700',
+    costPerDay: 180,
+    hireCost: 900,
+    autoTasks: [
+      { id: 'deescalation', name: 'Deeskalation', intervalMin: 6, description: 'Unterstützt bei aggressiven oder psychotischen Situationen' },
+      { id: 'patrol', name: 'Station kontrollieren', intervalMin: 12, description: 'Reduziert falsche Alarme, Diebstahl und Randalieren' },
+    ],
+  },
+]
+
+export function getWorkerType(id) {
+  return WORKER_TYPES.find(w => w.id === id) || null
+}

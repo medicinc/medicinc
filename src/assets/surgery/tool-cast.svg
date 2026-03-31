@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
+  <defs>
+    <linearGradient id="castRollTone" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#d6d3d1"/>
+    </linearGradient>
+  </defs>
+  <circle cx="84" cy="120" r="44" fill="url(#castRollTone)" stroke="#a8a29e" stroke-width="7"/>
+  <circle cx="84" cy="120" r="22" fill="#f5f5f4" stroke="#d6d3d1" stroke-width="2"/>
+  <rect x="116" y="91" width="88" height="58" rx="14" fill="url(#castRollTone)" stroke="#a8a29e" stroke-width="7"/>
+  <path d="M124 108 L196 108" stroke="#d6d3d1" stroke-width="4"/>
+  <path d="M124 126 L196 126" stroke="#d6d3d1" stroke-width="4"/>
+  <path d="M116 120 C132 108, 150 108, 166 120" stroke="#e7e5e4" stroke-width="3" fill="none" opacity="0.8"/>
+</svg>
