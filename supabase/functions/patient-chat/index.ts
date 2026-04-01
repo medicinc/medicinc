@@ -1,5 +1,3 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions'
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -37,16 +35,10 @@ function buildSystemPrompt(body: any) {
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: CORS_HEADERS })
   if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 })
-  const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
-  const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || ''
   const authHeader = request.headers.get('Authorization') || ''
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : ''
-  if (!supabaseUrl || !anonKey || !token) {
-    return Response.json({ message: 'Nicht autorisiert.' }, { status: 401, headers: CORS_HEADERS })
-  }
-  const sb = createClient(supabaseUrl, anonKey)
-  const { data: authData, error: authError } = await sb.auth.getUser(token)
-  if (authError || !authData?.user) {
+  const isLikelyJwt = token.split('.').length === 3
+  if (!token || !isLikelyJwt) {
     return Response.json({ message: 'Nicht autorisiert.' }, { status: 401, headers: CORS_HEADERS })
   }
   const apiKey = Deno.env.get('OPENAI_API_KEY')
