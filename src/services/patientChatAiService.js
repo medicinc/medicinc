@@ -157,6 +157,8 @@ export async function requestAiPatientReply({
   }
   const endpoint = getSupabaseFunctionUrl('patient-chat')
   if (!endpoint) return { ok: false, error: 'AI_NOT_CONFIGURED', message: 'VITE_SUPABASE_URL fehlt.' }
+  const sb = getSupabaseClient()
+  if (!sb) return { ok: false, error: 'AI_NOT_CONFIGURED', message: 'Supabase-Client nicht verfügbar.' }
 
   const compactHistory = history
     .slice(-10)
@@ -177,26 +179,25 @@ export async function requestAiPatientReply({
         message: 'Supabase-Session ungültig. Bitte neu einloggen.',
       }
     }
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...authHeaders },
+    const payload = {
+      mode,
+      lang,
+      translatorEnabled: !!translatorEnabled,
+      doctorMessage: userText,
+      history: compactHistory,
+      patient: redactedPatientPayload(patient),
+    }
+    const { data, error } = await sb.functions.invoke('patient-chat', {
+      body: payload,
+      headers: authHeaders,
       signal,
-      body: JSON.stringify({
-        mode,
-        lang,
-        translatorEnabled: !!translatorEnabled,
-        doctorMessage: userText,
-        history: compactHistory,
-        patient: redactedPatientPayload(patient),
-      }),
     })
-    const data = await safeReadJson(response)
-    if (!response.ok) {
+    if (error) {
       return {
         ok: false,
         error: 'AI_HTTP_ERROR',
-        status: response.status,
-        message: extractApiError(data) || 'AI Anfrage fehlgeschlagen.',
+        status: Number(error?.context?.status || 0) || null,
+        message: sanitizeText(error?.message || extractApiError(data) || 'AI Anfrage fehlgeschlagen.'),
       }
     }
     const text = sanitizeText(data?.text || '')
