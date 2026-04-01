@@ -46,11 +46,11 @@ function OnboardingRoute({ children }) {
 }
 
 function HospitalSetupRoute({ children }) {
-  const { isAuthenticated, needsOnboarding, needsHospital, authLoading } = useAuth()
+  const { isAuthenticated, needsOnboarding, authLoading, user } = useAuth()
   if (authLoading) return <div className="py-10 text-center text-surface-500">Lade Sitzung...</div>
   if (!isAuthenticated) return <Navigate to="/login" replace />
   if (needsOnboarding) return <Navigate to="/onboarding" replace />
-  if (!needsHospital) return <Navigate to="/dashboard" replace />
+  if (!user?.medicalLicense) return <Navigate to="/rettungsdienst" replace />
   return children
 }
 
