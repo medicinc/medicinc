@@ -182,15 +182,29 @@ export async function requestAiPatientReply({
       headers: authHeaders,
       signal,
     })
-    if (error) {
+    if (!error) {
+      const text = sanitizeText(data?.text || '')
+      if (!text) return { ok: false, error: 'AI_HTTP_ERROR', message: 'Keine Antwort erhalten.' }
+      return { ok: true, text, model: 'proxy', source: 'supabase-function' }
+    }
+    const invokeStatus = Number(error?.context?.status || 0) || null
+    // Fallback path: direct fetch can help diagnose/avoid invoke-layer quirks.
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders },
+      signal,
+      body: JSON.stringify(payload),
+    })
+    const fetchData = await safeReadJson(response)
+    if (!response.ok) {
       return {
         ok: false,
         error: 'AI_HTTP_ERROR',
-        status: Number(error?.context?.status || 0) || null,
-        message: sanitizeText(error?.message || extractApiError(data) || 'AI Anfrage fehlgeschlagen.'),
+        status: response.status || invokeStatus,
+        message: extractApiError(fetchData) || sanitizeText(error?.message || 'AI Anfrage fehlgeschlagen.'),
       }
     }
-    const text = sanitizeText(data?.text || '')
+    const text = sanitizeText(fetchData?.text || '')
     if (!text) return { ok: false, error: 'AI_HTTP_ERROR', message: 'Keine Antwort erhalten.' }
     return { ok: true, text, model: 'proxy', source: 'supabase-function' }
   } catch (error) {
@@ -207,12 +221,15 @@ export async function runAiChatDiagnostics() {
     supabaseUrl: base || null,
     anonKeyPresent: !!anon,
     sessionPresent: false,
+    authHeaderAttached: false,
     tokenLooksJwt: false,
     tokenExp: null,
     userResolved: false,
     functionInvokeOk: false,
     functionStatus: null,
     functionError: null,
+    directFetchStatus: null,
+    directFetchError: null,
   }
   if (!sb) {
     result.functionError = 'Supabase-Client nicht initialisiert.'
@@ -248,22 +265,28 @@ export async function runAiChatDiagnostics() {
       const authCheck = await sb.auth.getUser(token).catch(() => null)
       result.userResolved = !!authCheck?.data?.user
     }
+    const authHeaders = await getSupabaseAuthHeaders()
+    result.authHeaderAttached = !!authHeaders.Authorization
+    const payload = {
+      mode: 'triage',
+      lang: 'de',
+      translatorEnabled: false,
+      doctorMessage: 'Diagnose-Test: Bitte antworte mit einem kurzen Satz.',
+      history: [],
+      patient: {
+        age: 42,
+        gender: 'männlich',
+        chiefComplaint: 'Test',
+        symptoms: ['Test'],
+        vitals: { hr: 80, bp: '120/80', rr: 14, temp: 36.8, spo2: 98 },
+        context: {},
+      },
+    }
     const { error } = await sb.functions.invoke('patient-chat', {
       body: {
-        mode: 'triage',
-        lang: 'de',
-        translatorEnabled: false,
-        doctorMessage: 'Diagnose-Test: Bitte antworte mit einem kurzen Satz.',
-        history: [],
-        patient: {
-          age: 42,
-          gender: 'männlich',
-          chiefComplaint: 'Test',
-          symptoms: ['Test'],
-          vitals: { hr: 80, bp: '120/80', rr: 14, temp: 36.8, spo2: 98 },
-          context: {},
-        },
+        ...payload,
       },
+      headers: authHeaders,
     })
     if (!error) {
       result.functionInvokeOk = true
@@ -272,6 +295,16 @@ export async function runAiChatDiagnostics() {
     result.functionInvokeOk = false
     result.functionStatus = Number(error?.context?.status || 0) || null
     result.functionError = sanitizeText(error?.message || 'Unbekannter Function-Fehler')
+    const directRes = await fetch(getSupabaseFunctionUrl('patient-chat'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders },
+      body: JSON.stringify(payload),
+    }).catch(() => null)
+    if (directRes) {
+      result.directFetchStatus = directRes.status
+      const directData = await safeReadJson(directRes)
+      result.directFetchError = extractApiError(directData) || null
+    }
     return result
   } catch (error) {
     result.functionError = sanitizeText(error?.message || error || 'Unbekannter Fehler')

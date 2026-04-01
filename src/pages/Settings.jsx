@@ -180,12 +180,15 @@ export default function Settings() {
             <p>supabaseUrl: {aiDebugResult.supabaseUrl || 'n/a'}</p>
             <p>anonKeyPresent: {String(aiDebugResult.anonKeyPresent)}</p>
             <p>sessionPresent: {String(aiDebugResult.sessionPresent)}</p>
+            <p>authHeaderAttached: {String(aiDebugResult.authHeaderAttached)}</p>
             <p>tokenLooksJwt: {String(aiDebugResult.tokenLooksJwt)}</p>
             <p>tokenExp: {aiDebugResult.tokenExp || 'n/a'}</p>
             <p>userResolved: {String(aiDebugResult.userResolved)}</p>
             <p>functionInvokeOk: {String(aiDebugResult.functionInvokeOk)}</p>
             <p>functionStatus: {aiDebugResult.functionStatus ?? 'n/a'}</p>
             <p>functionError: {aiDebugResult.functionError || 'n/a'}</p>
+            <p>directFetchStatus: {aiDebugResult.directFetchStatus ?? 'n/a'}</p>
+            <p>directFetchError: {aiDebugResult.directFetchError || 'n/a'}</p>
           </div>
         )}
         <div className="rounded-xl border border-red-200 bg-red-50 p-3 space-y-2">
