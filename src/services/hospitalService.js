@@ -191,7 +191,7 @@ export async function upsertHospitalState(hospital) {
       localStorage.setItem('medisim_hospital_' + hospital.id, JSON.stringify(state))
       return { data: toRegistryEntry(state, inserted?.created_at || null), error: null, version: inserted?.version }
     }
-    const prevVersion = prev.version ?? 0
+    const prevVersion = Number(prev.version ?? 0)
     const nextVersion = prevVersion + 1
     const payload = hospitalToDbPayload(clean)
     payload.version = nextVersion
@@ -199,13 +199,10 @@ export async function upsertHospitalState(hospital) {
       .from('hospitals')
       .update(payload)
       .eq('id', hospital.id)
-      .eq('version', prevVersion)
       .select()
       .maybeSingle()
     if (error) return { data: null, error }
-    if (!updated) {
-      return { data: null, error: Object.assign(new Error('Versionskonflikt: bitte Seite neu laden.'), { code: 'CONFLICT' }) }
-    }
+    if (!updated) return { data: null, error: new Error('Krankenhaus konnte nicht aktualisiert werden.') }
     const state = dbRowToHospital(updated)
     localStorage.setItem('medisim_hospital_' + hospital.id, JSON.stringify(state))
     return { data: toRegistryEntry(state, null), error: null, version: updated.version }
