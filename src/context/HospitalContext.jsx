@@ -598,8 +598,10 @@ export function HospitalProvider({ children }) {
   const hospitalMedicationSafetyRef = useRef({})
   const hospitalPoliceCooldownRef = useRef({})
   const lastSyncedSignatureRef = useRef('')
-  const suppressNextCloudSyncRef = useRef(false)
+  const remoteSignatureRef = useRef('')
   const cloudSyncTimerRef = useRef(null)
+  const syncInFlightRef = useRef(false)
+  const pendingSyncStateRef = useRef(null)
   const isHospitalSyncLeader = useMemo(() => {
     if (!hospital?.id) return false
     // In local-only mode, keep single-device behavior unchanged.
@@ -803,7 +805,8 @@ export function HospitalProvider({ children }) {
     if (!sb) return
     const unsub = subscribeHospitalRealtime(hospital.id, (remoteState) => {
       if (!remoteState?.id) return
-      suppressNextCloudSyncRef.current = true
+      const remoteSignature = JSON.stringify({ ...remoteState, _syncVersion: undefined, _updatedAt: undefined })
+      remoteSignatureRef.current = remoteSignature
       setHospital((prev) => {
         const merged = normalizeHospitalState(remoteState, user)
         const signature = JSON.stringify({ ...merged, _syncVersion: undefined, _updatedAt: undefined })
@@ -821,19 +824,40 @@ export function HospitalProvider({ children }) {
     if (!sb) return
     const signature = JSON.stringify({ ...hospital, _syncVersion: undefined, _updatedAt: undefined })
     if (signature === lastSyncedSignatureRef.current) return
-    if (suppressNextCloudSyncRef.current) {
-      suppressNextCloudSyncRef.current = false
+    if (signature === remoteSignatureRef.current) {
+      remoteSignatureRef.current = ''
       lastSyncedSignatureRef.current = signature
       return
     }
+    const flush = async (state, stateSignature) => {
+      syncInFlightRef.current = true
+      try {
+        const res = await upsertHospitalState(state)
+        if (!res?.error) {
+          lastSyncedSignatureRef.current = stateSignature
+        }
+      } catch (_error) {
+        // noop: queued state remains for next flush attempt
+      } finally {
+        syncInFlightRef.current = false
+        if (pendingSyncStateRef.current) {
+          const next = pendingSyncStateRef.current
+          pendingSyncStateRef.current = null
+          const nextSignature = JSON.stringify({ ...next, _syncVersion: undefined, _updatedAt: undefined })
+          if (nextSignature !== lastSyncedSignatureRef.current) {
+            void flush(next, nextSignature)
+          }
+        }
+      }
+    }
     if (cloudSyncTimerRef.current) clearTimeout(cloudSyncTimerRef.current)
     cloudSyncTimerRef.current = setTimeout(() => {
-      upsertHospitalState(hospital).then((res) => {
-        if (!res?.error) {
-          lastSyncedSignatureRef.current = signature
-        }
-      }).catch(() => {})
-    }, 180)
+      if (syncInFlightRef.current) {
+        pendingSyncStateRef.current = hospital
+        return
+      }
+      void flush(hospital, signature)
+    }, 70)
     return () => {
       if (cloudSyncTimerRef.current) clearTimeout(cloudSyncTimerRef.current)
     }
