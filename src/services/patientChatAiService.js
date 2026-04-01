@@ -50,18 +50,23 @@ async function getSupabaseAuthHeaders() {
   const isLikelyJwt = (token) => String(token || '').split('.').length === 3
   let session = (await sb.auth.getSession()).data?.session || null
   let accessToken = sanitizeText(session?.access_token || '')
+  if (accessToken && accessToken === anonKey) accessToken = ''
   if (!isLikelyJwt(accessToken)) {
     const refreshed = await sb.auth.refreshSession().catch(() => null)
     session = refreshed?.data?.session || session
     accessToken = sanitizeText(session?.access_token || '')
   }
+  if (accessToken && accessToken === anonKey) return {}
   if (!isLikelyJwt(accessToken)) return {}
   const authCheck = await sb.auth.getUser(accessToken).catch(() => null)
   if (!authCheck?.data?.user) {
     const refreshed = await sb.auth.refreshSession().catch(() => null)
     accessToken = sanitizeText(refreshed?.data?.session?.access_token || '')
   }
+  if (accessToken && accessToken === anonKey) return {}
   if (!isLikelyJwt(accessToken)) return {}
+  const authCheckAfterRefresh = await sb.auth.getUser(accessToken).catch(() => null)
+  if (!authCheckAfterRefresh?.data?.user) return {}
   return {
     apikey: anonKey,
     Authorization: `Bearer ${accessToken}`,
