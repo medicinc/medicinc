@@ -597,6 +597,9 @@ export function HospitalProvider({ children }) {
   const infusionTickRef = useRef(null)
   const hospitalMedicationSafetyRef = useRef({})
   const hospitalPoliceCooldownRef = useRef({})
+  const lastSyncedSignatureRef = useRef('')
+  const suppressNextCloudSyncRef = useRef(false)
+  const cloudSyncTimerRef = useRef(null)
   const withDebtSpendPopup = useCallback((prev, updated, spendLabel = 'Einkauf') => {
     if (Number(prev?.balance || 0) >= 0) return updated
     return {
@@ -785,14 +788,41 @@ export function HospitalProvider({ children }) {
     if (!sb) return
     const unsub = subscribeHospitalRealtime(hospital.id, (remoteState) => {
       if (!remoteState?.id) return
+      suppressNextCloudSyncRef.current = true
       setHospital((prev) => {
         const merged = normalizeHospitalState(remoteState, user)
+        const signature = JSON.stringify({ ...merged, _syncVersion: undefined, _updatedAt: undefined })
+        lastSyncedSignatureRef.current = signature
         localStorage.setItem('medisim_hospital_' + merged.id, JSON.stringify(merged))
         return merged
       })
     })
     return unsub
   }, [user?.hospitalId, hospital?.id, user])
+
+  useEffect(() => {
+    if (!hospital?.id) return
+    const sb = getSupabaseClient()
+    if (!sb) return
+    const signature = JSON.stringify({ ...hospital, _syncVersion: undefined, _updatedAt: undefined })
+    if (signature === lastSyncedSignatureRef.current) return
+    if (suppressNextCloudSyncRef.current) {
+      suppressNextCloudSyncRef.current = false
+      lastSyncedSignatureRef.current = signature
+      return
+    }
+    if (cloudSyncTimerRef.current) clearTimeout(cloudSyncTimerRef.current)
+    cloudSyncTimerRef.current = setTimeout(() => {
+      upsertHospitalState(hospital).then((res) => {
+        if (!res?.error) {
+          lastSyncedSignatureRef.current = signature
+        }
+      }).catch(() => {})
+    }, 180)
+    return () => {
+      if (cloudSyncTimerRef.current) clearTimeout(cloudSyncTimerRef.current)
+    }
+  }, [hospital])
 
   const roomsExist = useCallback((roomId) => {
     return hospital?.rooms?.some(r => r.id === roomId) || false

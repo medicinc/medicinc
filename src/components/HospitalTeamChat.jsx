@@ -27,12 +27,19 @@ export default function HospitalTeamChat({ hospitalId }) {
     }
     let cancelled = false
     ;(async () => {
-      const { data, error: fetchError } = await fetchHospitalChatMessages(hospitalId)
-      if (cancelled) return
-      if (fetchError) setError(fetchError.message || 'Nachrichten konnten nicht geladen werden.')
-      setMessages(data || [])
-      setLoading(false)
-      setTimeout(scrollDown, 50)
+      try {
+        const { data, error: fetchError } = await fetchHospitalChatMessages(hospitalId)
+        if (cancelled) return
+        if (fetchError) setError(fetchError.message || 'Nachrichten konnten nicht geladen werden.')
+        setMessages(data || [])
+      } catch (_error) {
+        if (!cancelled) setError('Nachrichten konnten nicht geladen werden.')
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+          setTimeout(scrollDown, 50)
+        }
+      }
     })()
     const unsub = subscribeHospitalChatMessages(hospitalId, (row) => {
       if (!row?.id) return
