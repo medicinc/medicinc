@@ -9,6 +9,8 @@
 - `PUBLIC_APP_URL`
 - `WAITLIST_IP_SALT`
 - `WAITLIST_INVITE_TOKEN`
+- `ALPHA_REGISTRATION_CODE` (server-only; der Einladungs-String für Alpha-Registrierung)
+- `ALPHA_REGISTRATION_JWT_SECRET` (mindestens 32 Zeichen; zum Signieren des kurz gültigen Registrierungs-Tokens)
 
 ## Deploy Order
 
@@ -18,7 +20,16 @@
    - `waitlist-submit`
    - `waitlist-confirm`
    - `waitlist-invite`
+   - `alpha-registration-gate` (öffentlich, Code-Prüfung + JWT)
+   - `alpha-register` (öffentlich, erstellt User per Service Role nach gültigem JWT)
 4. Deploy frontend.
+
+## Alpha-Registrierung (sicher)
+
+1. In Supabase **Authentication → Providers → Email**: „Enable email signups“ deaktivieren, sobald die Alpha-Registrierung nur noch über die Edge Function laufen soll (sonst kann jemand weiterhin `signUp` direkt gegen die API aufrufen).
+2. Secrets `ALPHA_REGISTRATION_CODE` und `ALPHA_REGISTRATION_JWT_SECRET` setzen.
+3. Functions deployen: `alpha-registration-gate` und `alpha-register` mit `--no-verify-jwt` (die Absicherung erfolgt über Code + JWT im Body, nicht über User-JWT).
+4. Test: Code auf `/register-gate` eingeben → Token → Registrierung abschließen → User in **Authentication → Users** sichtbar.
 
 ## End-to-End DOI Test
 

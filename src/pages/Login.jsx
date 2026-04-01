@@ -130,7 +130,7 @@ export default function Login() {
           {getSupabaseClient() && (
             <p className="mt-6 text-center text-sm text-surface-500">
               Noch kein Konto?{' '}
-              <Link to="/register" className="text-primary-600 font-medium hover:text-primary-700">Registrieren</Link>
+              <Link to="/register-gate" className="text-primary-600 font-medium hover:text-primary-700">Registrieren</Link>
             </p>
           )}
 

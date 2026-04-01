@@ -4,6 +4,7 @@ import Layout from './components/layout/Layout'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import RegisterGate from './pages/RegisterGate'
 import Onboarding from './pages/Onboarding'
 import HospitalChoice from './pages/HospitalChoice'
 import HospitalCreate from './pages/HospitalCreate'
@@ -103,6 +104,7 @@ export default function App() {
       <Route element={<Layout />}>
         <Route path="/" element={<PublicRoute><Landing /></PublicRoute>} />
         <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+        <Route path="/register-gate" element={<PublicRoute><RegisterGate /></PublicRoute>} />
         <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
         <Route path="/waitlist/confirm" element={<WaitlistConfirm />} />
         <Route path="/onboarding" element={<OnboardingRoute><Onboarding /></OnboardingRoute>} />

@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Activity, ArrowRight, Mail, Lock, User } from 'lucide-react'
 import { getSupabaseClient } from '../lib/supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import { hasAllRequiredRegistrationConsents } from '../services/consentService'
+import { clearAlphaRegistrationToken, getAlphaRegistrationToken } from '../services/alphaRegistrationService'
 
 export default function Register() {
   const sb = getSupabaseClient()
@@ -21,6 +22,10 @@ export default function Register() {
   const [info, setInfo] = useState('')
   const [loading, setLoading] = useState(false)
 
+  useEffect(() => {
+    if (!getAlphaRegistrationToken()) navigate('/register-gate', { replace: true })
+  }, [navigate])
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
@@ -35,7 +40,8 @@ export default function Register() {
     }
     setLoading(true)
     try {
-      await register(name, email, password, consents)
+      await register(name, email, password, consents, getAlphaRegistrationToken())
+      clearAlphaRegistrationToken()
       setInfo('Wenn E-Mail-Bestätigung aktiv ist: bitte Postfach prüfen. Danach kannst du dich einloggen.')
       setTimeout(() => navigate('/login'), 2400)
     } catch (err) {

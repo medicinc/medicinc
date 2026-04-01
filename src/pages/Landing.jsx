@@ -168,7 +168,10 @@ export default function Landing() {
                   <ArrowRight className="w-5 h-5" />
                 </button>
                 <Link to="/login" className="btn-secondary text-lg !px-8 !py-4">
-                  Login / Zugang
+                  Login
+                </Link>
+                <Link to="/register-gate" className="btn-secondary text-lg !px-8 !py-4">
+                  Registrierung
                 </Link>
                 <Link to="/cases" className="text-primary-700 font-medium inline-flex items-center gap-1 hover:text-primary-800">
                   Mehr sehen <ChevronRight className="w-4 h-4" />
@@ -426,6 +429,9 @@ export default function Landing() {
             </button>
             <Link to="/login" className="inline-flex items-center gap-2 px-8 py-4 bg-primary-500/30 text-white border border-white/20 font-semibold rounded-xl hover:bg-primary-500/50 transition-colors text-lg">
               <BookOpen className="w-5 h-5" /> Zum Login
+            </Link>
+            <Link to="/register-gate" className="inline-flex items-center gap-2 px-8 py-4 bg-primary-500/30 text-white border border-white/20 font-semibold rounded-xl hover:bg-primary-500/50 transition-colors text-lg">
+              <BookOpen className="w-5 h-5" /> Zur Registrierung
             </Link>
           </div>
         </div>

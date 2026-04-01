@@ -7,6 +7,7 @@ import { removeHospitalsOwnedByUser } from '../services/hospitalService'
 import { getSupabaseClient, isUuid } from '../lib/supabaseClient'
 import { buildUserFromSession, userToGameData, upsertProfileGameData } from '../services/supabaseProfileRepository'
 import { migrateLocalProfileToSupabaseIfNeeded } from '../services/localStorageMigration'
+import { registerWithAlphaGate } from '../services/alphaRegistrationService'
 
 const AuthContext = createContext(null)
 const XP_PER_LEVEL = 500
@@ -384,7 +385,7 @@ export function AuthProvider({ children }) {
     return parsed
   }, [bootstrapFixedAccounts, persist])
 
-  const register = useCallback(async (name, email, password, consents = {}) => {
+  const register = useCallback(async (name, email, password, consents = {}, gateToken) => {
     const sb = getSupabaseClient()
     if (!sb) {
       void name
@@ -392,20 +393,20 @@ export function AuthProvider({ children }) {
       void password
       throw new Error('Neue Registrierungen sind deaktiviert. Bitte nutze einen freigegebenen Account.')
     }
-    const { error } = await sb.auth.signUp({
-      email: String(email).trim().toLowerCase(),
-      password: String(password),
-      options: {
-        data: {
-          display_name: name,
-          tos_accepted: !!consents?.tosAccepted,
-          privacy_accepted: !!consents?.privacyAccepted,
-          ai_chat_accepted: !!consents?.aiChatAccepted,
-          consent_version: '2026-04-01',
-        },
-      },
+    const token = String(gateToken || '').trim()
+    if (!token) {
+      throw new Error('Alpha-Zugang nicht bestätigt. Bitte zuerst den Einladungs-Code auf der Registrierungsseite eingeben.')
+    }
+    const result = await registerWithAlphaGate({
+      name,
+      email,
+      password,
+      consents,
+      gateToken: token,
     })
-    if (error) throw new Error(error.message || 'Registrierung fehlgeschlagen.')
+    if (!result?.ok) {
+      throw new Error(result?.message || 'Registrierung fehlgeschlagen.')
+    }
   }, [])
 
   const updateUser = useCallback(async (updates) => {
