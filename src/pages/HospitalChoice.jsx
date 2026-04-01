@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { createHospitalMembership, listPublicHospitals } from '../services/hospitalService'
+import { upsertProfileGameData, userToGameData } from '../services/supabaseProfileRepository'
 import {
   Building2, Plus, Users, Search, Star, MapPin, ChevronRight,
   Crown, Shield, Heart, Bed, ArrowRight, Flag
@@ -60,10 +61,21 @@ export default function HospitalChoice() {
       setError(joinError.message || 'Beitritt zum Krankenhaus fehlgeschlagen.')
       return
     }
-    await updateUser({
+    const nextUser = await updateUser({
       hospitalId: hospital.id,
       hospitalName: hospital.name,
     })
+    if (nextUser?.id) {
+      const { error: profileError } = await upsertProfileGameData(
+        nextUser.id,
+        nextUser.email,
+        userToGameData(nextUser)
+      )
+      if (profileError) {
+        setError(profileError.message || 'Krankenhaus-Beitritt konnte nicht im Profil gespeichert werden.')
+        return
+      }
+    }
     navigate('/hospital')
   }
 

@@ -188,8 +188,11 @@ function withUserRuntimeDefaults(rawUser) {
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
-  const [authLoading, setAuthLoading] = useState(true)
+  const [user, setUser] = useState(() => {
+    const parsed = safeParseJson(localStorage.getItem('medisim_user'), null)
+    return parsed ? withUserRuntimeDefaults(withLevelProgress(parsed)) : null
+  })
+  const [authLoading, setAuthLoading] = useState(false)
   const [dailyLoginPanelOpen, setDailyLoginPanelOpen] = useState(false)
 
   const openDailyLoginPanel = useCallback(() => setDailyLoginPanelOpen(true), [])
@@ -259,11 +262,7 @@ export function AuthProvider({ children }) {
     let cancelled = false
     const sb = getSupabaseClient()
     if (sb) {
-      const loadingGuard = setTimeout(() => {
-        if (!cancelled) setAuthLoading(false)
-      }, 8000)
       ;(async () => {
-        setAuthLoading(true)
         try {
           const { data: { session }, error: sessionError } = await sb.auth.getSession()
           if (sessionError) throw sessionError
@@ -279,10 +278,7 @@ export function AuthProvider({ children }) {
             localStorage.removeItem('medisim_user')
           }
         } catch (_error) {
-          if (!cancelled) {
-            setUser(null)
-            localStorage.removeItem('medisim_user')
-          }
+          // Keep current user state on transient auth/session errors.
         } finally {
           if (!cancelled) setAuthLoading(false)
         }
@@ -303,18 +299,13 @@ export function AuthProvider({ children }) {
             }
           }
         } catch (_error) {
-          // Prevent stuck auth UI on session parsing/loading errors.
-          if (!cancelled) {
-            setUser(null)
-            localStorage.removeItem('medisim_user')
-          }
+          // Keep existing user and avoid forced logout on transient issues.
         } finally {
           if (!cancelled) setAuthLoading(false)
         }
       })
       return () => {
         cancelled = true
-        clearTimeout(loadingGuard)
         sub.subscription.unsubscribe()
       }
     }
