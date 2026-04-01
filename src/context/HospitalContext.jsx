@@ -27,6 +27,8 @@ import {
 } from '../data/medications'
 import { isPrimaryDiagnosisMatch } from '../data/conditionMapping'
 import { getActiveEffects, getKhCaseMoneyBonusPct, getMedicationDiscountPct, getLabOrderCost, getRoomDiscountPct } from '../data/shopSpecials'
+import { getSupabaseClient } from '../lib/supabaseClient'
+import { fetchHospitalById, upsertHospitalState, subscribeHospitalRealtime } from '../services/hospitalService'
 
 const HospitalContext = createContext(null)
 
@@ -721,6 +723,13 @@ export function HospitalProvider({ children }) {
     const normalized = normalizeHospitalState(h, user)
     setHospital(normalized)
     localStorage.setItem('medisim_hospital_' + normalized.id, JSON.stringify(normalized))
+    if (getSupabaseClient()) {
+      upsertHospitalState(normalized).then((res) => {
+        if (res?.error?.code === 'CONFLICT') {
+          console.warn('[MediSim] Krankenhaus-Sync: Versionskonflikt – bitte Seite neu laden.')
+        }
+      }).catch(() => {})
+    }
   }, [user])
 
   useEffect(() => {
@@ -728,17 +737,52 @@ export function HospitalProvider({ children }) {
       setHospital(null)
       return
     }
-    const saved = localStorage.getItem('medisim_hospital_' + user.hospitalId)
-    if (saved) {
-      const parsed = safeParseJson(saved)
-      if (parsed) {
-        setHospital(normalizeHospitalState(parsed, user))
-        return
+    let cancelled = false
+    const sb = getSupabaseClient()
+    ;(async () => {
+      if (sb) {
+        const { data, error } = await fetchHospitalById(user.hospitalId)
+        if (cancelled) return
+        if (error) {
+          console.warn('[MediSim] Krankenhaus laden:', error)
+        }
+        if (data?.state) {
+          setHospital(normalizeHospitalState(data.state, user))
+          return
+        }
       }
-    }
-    const fresh = createDefaultHospital(user)
-    persist(fresh)
-  }, [user?.hospitalId, user?.hospitalName, user?.id, user?.name, user?.ownedHospital, user?.title, persist])
+      const saved = localStorage.getItem('medisim_hospital_' + user.hospitalId)
+      if (saved) {
+        const parsed = safeParseJson(saved)
+        if (parsed) {
+          setHospital(normalizeHospitalState(parsed, user))
+          return
+        }
+      }
+      const fresh = createDefaultHospital(user)
+      setHospital(normalizeHospitalState(fresh, user))
+      localStorage.setItem('medisim_hospital_' + fresh.id, JSON.stringify(normalizeHospitalState(fresh, user)))
+      if (sb) {
+        upsertHospitalState(normalizeHospitalState(fresh, user)).catch(() => {})
+      }
+    })()
+    return () => { cancelled = true }
+  }, [user?.hospitalId, user?.hospitalName, user?.id, user?.name, user?.ownedHospital, user?.title])
+
+  useEffect(() => {
+    if (!user?.hospitalId || !hospital?.id) return
+    const sb = getSupabaseClient()
+    if (!sb) return
+    const unsub = subscribeHospitalRealtime(hospital.id, (remoteState) => {
+      if (!remoteState?.id) return
+      setHospital((prev) => {
+        const merged = normalizeHospitalState(remoteState, user)
+        localStorage.setItem('medisim_hospital_' + merged.id, JSON.stringify(merged))
+        return merged
+      })
+    })
+    return unsub
+  }, [user?.hospitalId, hospital?.id, user])
 
   const roomsExist = useCallback((roomId) => {
     return hospital?.rooms?.some(r => r.id === roomId) || false

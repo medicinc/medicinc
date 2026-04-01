@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { getSupabaseClient } from '../lib/supabaseClient'
 import { Activity, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
 
 export default function Login() {
@@ -56,7 +57,9 @@ export default function Login() {
 
           <h1 className="font-display text-3xl font-bold text-surface-900 mb-2">In dein Konto einloggen</h1>
           <p className="text-surface-500 mb-8">
-            Zugriff nur mit freigegebenem Admin-Login.
+            {getSupabaseClient()
+              ? 'Mit Supabase-Account (E-Mail/Passwort) oder Demo-Login.'
+              : 'Zugriff nur mit freigegebenem Demo-Login (ohne Supabase).'}
           </p>
 
           {error && (
@@ -123,6 +126,13 @@ export default function Login() {
               )}
             </button>
           </form>
+
+          {getSupabaseClient() && (
+            <p className="mt-6 text-center text-sm text-surface-500">
+              Noch kein Konto?{' '}
+              <Link to="/register" className="text-primary-600 font-medium hover:text-primary-700">Registrieren</Link>
+            </p>
+          )}
 
           <div className="mt-8">
             <div className="relative">

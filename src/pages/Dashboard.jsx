@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useHospital } from '../context/HospitalContext'
+import HospitalTeamChat from '../components/HospitalTeamChat'
 import { TRIAGE_LEVELS } from '../data/patientGenerator'
 import {
   Activity, Stethoscope, Building2, Trophy, TrendingUp, Clock,
@@ -236,6 +237,10 @@ export default function Dashboard() {
               </Link>
             </div>
           </div>
+
+          {!isRescueOnly && hospital?.id && (
+            <HospitalTeamChat hospitalId={hospital.id} />
+          )}
         </div>
       </div>
     </div>

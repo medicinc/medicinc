@@ -225,5 +225,6 @@ export async function removeUserLocalData(user) {
   if (!user?.email) return { error: new Error('Kein Nutzer zum Löschen gefunden.') }
   localStorage.removeItem('medisim_user')
   localStorage.removeItem('medisim_user_' + user.email)
+  localStorage.removeItem('medisim_supabase_migrated_v1')
   return { error: null }
 }

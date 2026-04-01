@@ -4,6 +4,9 @@ import { computeNewAchievementUnlocks } from '../data/achievements'
 import { createFreshUser } from '../services/profileService'
 import { removeUserLocalData } from '../services/profileService'
 import { removeHospitalsOwnedByUser } from '../services/hospitalService'
+import { getSupabaseClient, isUuid } from '../lib/supabaseClient'
+import { buildUserFromSession, userToGameData, upsertProfileGameData } from '../services/supabaseProfileRepository'
+import { migrateLocalProfileToSupabaseIfNeeded } from '../services/localStorageMigration'
 
 const AuthContext = createContext(null)
 const XP_PER_LEVEL = 500
@@ -192,14 +195,22 @@ export function AuthProvider({ children }) {
   const openDailyLoginPanel = useCallback(() => setDailyLoginPanelOpen(true), [])
   const closeDailyLoginPanel = useCallback(() => setDailyLoginPanelOpen(false), [])
 
-  const persist = (u) => {
+  const syncProfileToCloud = useCallback((merged) => {
+    const sb = getSupabaseClient()
+    if (sb && merged && isUuid(merged.id)) {
+      upsertProfileGameData(merged.id, merged.email, userToGameData(merged)).catch(() => {})
+    }
+  }, [])
+
+  const persist = useCallback((u) => {
     const normalized = withUserRuntimeDefaults(withLevelProgress(u))
     setUser(normalized)
     localStorage.setItem('medisim_user', JSON.stringify(normalized))
     if (normalized?.email) {
       localStorage.setItem('medisim_user_' + normalized.email, JSON.stringify(normalized))
     }
-  }
+    syncProfileToCloud(normalized)
+  }, [syncProfileToCloud])
 
   const bootstrapFixedAccounts = useCallback(() => {
     FIXED_ALLOWED_ACCOUNTS.forEach((account) => {
@@ -245,6 +256,45 @@ export function AuthProvider({ children }) {
   }, [])
 
   useEffect(() => {
+    let cancelled = false
+    const sb = getSupabaseClient()
+    if (sb) {
+      ;(async () => {
+        setAuthLoading(true)
+        const { data: { session } } = await sb.auth.getSession()
+        if (cancelled) return
+        if (session?.user) {
+          await migrateLocalProfileToSupabaseIfNeeded(session.user)
+          const mapped = await buildUserFromSession(session)
+          if (mapped) {
+            persist({ ...mapped, id: session.user.id, email: session.user.email || mapped.email })
+          }
+        } else {
+          setUser(null)
+          localStorage.removeItem('medisim_user')
+        }
+        if (!cancelled) setAuthLoading(false)
+      })()
+      const { data: sub } = sb.auth.onAuthStateChange(async (event, session) => {
+        if (cancelled) return
+        if (event === 'SIGNED_OUT' || !session) {
+          setUser(null)
+          localStorage.removeItem('medisim_user')
+          return
+        }
+        if (session.user) {
+          await migrateLocalProfileToSupabaseIfNeeded(session.user)
+          const mapped = await buildUserFromSession(session)
+          if (mapped) {
+            persist({ ...mapped, id: session.user.id, email: session.user.email || mapped.email })
+          }
+        }
+      })
+      return () => {
+        cancelled = true
+        sub.subscription.unsubscribe()
+      }
+    }
     bootstrapFixedAccounts()
     const saved = localStorage.getItem('medisim_user')
     const parsed = safeParseJson(saved)
@@ -255,7 +305,8 @@ export function AuthProvider({ children }) {
       localStorage.removeItem('medisim_user')
     }
     setAuthLoading(false)
-  }, [bootstrapFixedAccounts])
+    return () => { cancelled = true }
+  }, [bootstrapFixedAccounts, persist])
 
   const resolveUserByIdentifier = (identifier) => {
     const key = String(identifier || '').trim()
@@ -278,8 +329,37 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(async (identifier, password) => {
     bootstrapFixedAccounts()
+    const sb = getSupabaseClient()
+    const normalizedIdentifier = normalizeIdentifier(identifier)
+    const resolvedCandidate = resolveUserByIdentifier(identifier)
+    const email = String(identifier).includes('@')
+      ? String(identifier).trim().toLowerCase()
+      : (resolvedCandidate?.email ? String(resolvedCandidate.email).trim().toLowerCase() : null)
+    if (sb) {
+      if (!email) {
+        throw new Error('Bitte mit E-Mail einloggen (oder einen Supabase-Account mit diesem Benutzernamen anlegen).')
+      }
+      const { data, error } = await sb.auth.signInWithPassword({ email, password })
+      if (!error && data.session?.user) {
+        await migrateLocalProfileToSupabaseIfNeeded(data.session.user)
+        const mapped = await buildUserFromSession(data.session)
+        if (mapped) {
+          const next = { ...mapped, id: data.session.user.id, email: data.session.user.email || mapped.email }
+          persist(next)
+          return next
+        }
+      }
+      if (error) {
+        throw new Error(error.message || 'Supabase-Login fehlgeschlagen.')
+      } else if (!data.session) {
+        throw new Error('Keine Session (z. B. E-Mail noch nicht bestätigt).')
+      }
+    }
     const parsed = resolveUserByIdentifier(identifier)
     if (!parsed || !FIXED_ALLOWED_EMAILS.has(normalizeIdentifier(parsed?.email))) {
+      if (!sb && normalizedIdentifier.includes('@')) {
+        throw new Error('Supabase-Login ist nicht aktiv (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY fehlen in dieser Umgebung).')
+      }
       throw new Error('Zugang nicht erlaubt. Bitte nutze einen freigegebenen Account.')
     }
     const expectedPassword = String(parsed.authPassword || '')
@@ -288,13 +368,22 @@ export function AuthProvider({ children }) {
     }
     persist(parsed)
     return parsed
-  }, [bootstrapFixedAccounts])
+  }, [bootstrapFixedAccounts, persist])
 
   const register = useCallback(async (name, email, password) => {
-    void name
-    void email
-    void password
-    throw new Error('Neue Registrierungen sind deaktiviert. Bitte nutze einen freigegebenen Account.')
+    const sb = getSupabaseClient()
+    if (!sb) {
+      void name
+      void email
+      void password
+      throw new Error('Neue Registrierungen sind deaktiviert. Bitte nutze einen freigegebenen Account.')
+    }
+    const { error } = await sb.auth.signUp({
+      email: String(email).trim().toLowerCase(),
+      password: String(password),
+      options: { data: { display_name: name } },
+    })
+    if (error) throw new Error(error.message || 'Registrierung fehlgeschlagen.')
   }, [])
 
   const updateUser = useCallback(async (updates) => {
@@ -314,8 +403,9 @@ export function AuthProvider({ children }) {
       nextUser = merged
       return merged
     })
+    if (nextUser) syncProfileToCloud(nextUser)
     return nextUser
-  }, [])
+  }, [syncProfileToCloud])
 
   const addMoney = useCallback(async (amount) => {
     let nextUser = null
@@ -331,8 +421,9 @@ export function AuthProvider({ children }) {
       nextUser = updated
       return updated
     })
+    if (nextUser) syncProfileToCloud(nextUser)
     return nextUser
-  }, [])
+  }, [syncProfileToCloud])
 
   const clearLegalState = useCallback(async () => {
     return updateUser({ legalState: normalizeLegalState(null) })
@@ -346,9 +437,10 @@ export function AuthProvider({ children }) {
       const updated = withUserRuntimeDefaults({ ...prev, legalState: { ...legal, active: false } })
       localStorage.setItem('medisim_user', JSON.stringify(updated))
       if (prev?.email) localStorage.setItem('medisim_user_' + prev.email, JSON.stringify(updated))
+      syncProfileToCloud(updated)
       return updated
     })
-  }, [])
+  }, [syncProfileToCloud])
 
   const payLegalBail = useCallback(async () => {
     let success = false
@@ -366,10 +458,11 @@ export function AuthProvider({ children }) {
       })
       localStorage.setItem('medisim_user', JSON.stringify(updated))
       if (prev?.email) localStorage.setItem('medisim_user_' + prev.email, JSON.stringify(updated))
+      syncProfileToCloud(updated)
       return updated
     })
     return success
-  }, [])
+  }, [syncProfileToCloud])
 
   const triggerPolicePenalty = useCallback(async ({
     reason = 'Regelverstoß',
@@ -415,8 +508,9 @@ export function AuthProvider({ children }) {
       nextUser = updated
       return updated
     })
+    if (nextUser) syncProfileToCloud(nextUser)
     return nextUser
-  }, [])
+  }, [syncProfileToCloud])
 
   const resetUserProfile = useCallback(async () => {
     let nextUser = null
@@ -442,10 +536,13 @@ export function AuthProvider({ children }) {
       nextUser = reset
       return reset
     })
+    if (nextUser) syncProfileToCloud(nextUser)
     return nextUser
-  }, [])
+  }, [syncProfileToCloud])
 
   const logout = useCallback(async () => {
+    const sb = getSupabaseClient()
+    if (sb) await sb.auth.signOut()
     setUser(null)
     localStorage.removeItem('medisim_user')
   }, [])
