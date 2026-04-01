@@ -31,19 +31,62 @@ function showGlobalCrashOverlay(title, message, details = '') {
   wrap.style.alignItems = 'center'
   wrap.style.justifyContent = 'center'
   wrap.style.padding = '24px'
-  wrap.innerHTML = `
-    <div style="max-width:760px;width:100%;background:white;border:1px solid #fecaca;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.08);padding:20px;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;">
-      <h2 style="margin:0 0 10px 0;font-size:22px;color:#0f172a;">${title}</h2>
-      <p style="margin:0 0 10px 0;color:#334155;">${message}</p>
-      <div style="font-size:12px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:10px;white-space:pre-wrap;">${String(details || '').slice(0, 4000)}</div>
-      <div style="display:flex;gap:10px;margin-top:12px;">
-        <button id="medisim-reload-btn" style="flex:1;padding:10px 12px;border-radius:10px;border:none;background:#2563eb;color:white;font-weight:600;cursor:pointer;">Seite neu laden</button>
-      </div>
-    </div>
-  `
+  const card = document.createElement('div')
+  card.style.maxWidth = '760px'
+  card.style.width = '100%'
+  card.style.background = 'white'
+  card.style.border = '1px solid #fecaca'
+  card.style.borderRadius = '16px'
+  card.style.boxShadow = '0 8px 30px rgba(0,0,0,.08)'
+  card.style.padding = '20px'
+  card.style.fontFamily = 'system-ui,-apple-system,Segoe UI,Roboto,sans-serif'
+
+  const heading = document.createElement('h2')
+  heading.style.margin = '0 0 10px 0'
+  heading.style.fontSize = '22px'
+  heading.style.color = '#0f172a'
+  heading.textContent = String(title || 'Unerwarteter Fehler')
+
+  const paragraph = document.createElement('p')
+  paragraph.style.margin = '0 0 10px 0'
+  paragraph.style.color = '#334155'
+  paragraph.textContent = String(message || 'Ein unerwarteter Fehler ist aufgetreten.')
+
+  const detailBox = document.createElement('div')
+  detailBox.style.fontSize = '12px'
+  detailBox.style.color = '#b91c1c'
+  detailBox.style.background = '#fef2f2'
+  detailBox.style.border = '1px solid #fecaca'
+  detailBox.style.borderRadius = '10px'
+  detailBox.style.padding = '10px'
+  detailBox.style.whiteSpace = 'pre-wrap'
+  detailBox.textContent = String(details || '').slice(0, 4000)
+
+  const buttonRow = document.createElement('div')
+  buttonRow.style.display = 'flex'
+  buttonRow.style.gap = '10px'
+  buttonRow.style.marginTop = '12px'
+
+  const reloadBtn = document.createElement('button')
+  reloadBtn.id = 'medisim-reload-btn'
+  reloadBtn.style.flex = '1'
+  reloadBtn.style.padding = '10px 12px'
+  reloadBtn.style.borderRadius = '10px'
+  reloadBtn.style.border = 'none'
+  reloadBtn.style.background = '#2563eb'
+  reloadBtn.style.color = 'white'
+  reloadBtn.style.fontWeight = '600'
+  reloadBtn.style.cursor = 'pointer'
+  reloadBtn.textContent = 'Seite neu laden'
+  buttonRow.appendChild(reloadBtn)
+
+  card.appendChild(heading)
+  card.appendChild(paragraph)
+  card.appendChild(detailBox)
+  card.appendChild(buttonRow)
+  wrap.appendChild(card)
   document.body.appendChild(wrap)
-  const reloadBtn = document.getElementById('medisim-reload-btn')
-  if (reloadBtn) reloadBtn.addEventListener('click', () => window.location.reload())
+  reloadBtn.addEventListener('click', () => window.location.reload())
 }
 
 window.addEventListener('error', (event) => {

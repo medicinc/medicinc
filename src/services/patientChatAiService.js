@@ -1,3 +1,4 @@
+import { getSupabaseClient } from '../lib/supabaseClient'
 const STORAGE_CONSENT_KEY = 'medisim_ai_consent'
 
 try {
@@ -37,12 +38,15 @@ function getSupabaseFunctionUrl(functionName) {
   return `${base.replace(/\/+$/, '')}/functions/v1/${functionName}`
 }
 
-function getSupabaseAuthHeaders() {
+async function getSupabaseAuthHeaders() {
+  const sb = getSupabaseClient()
   const anonKey = sanitizeText(import.meta.env.VITE_SUPABASE_ANON_KEY || '')
-  if (!anonKey) return {}
+  const session = sb ? (await sb.auth.getSession()).data?.session : null
+  const accessToken = sanitizeText(session?.access_token || '')
+  if (!anonKey || !accessToken) return {}
   return {
     apikey: anonKey,
-    Authorization: `Bearer ${anonKey}`,
+    Authorization: `Bearer ${accessToken}`,
   }
 }
 
@@ -144,7 +148,7 @@ export async function requestAiPatientReply({
   try {
     const response = await fetch(endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getSupabaseAuthHeaders() },
+      headers: { 'Content-Type': 'application/json', ...(await getSupabaseAuthHeaders()) },
       signal,
       body: JSON.stringify({
         mode,

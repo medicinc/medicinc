@@ -1,3 +1,5 @@
+import { getSupabaseClient } from '../lib/supabaseClient'
+
 function sanitize(value) {
   return String(value || '').trim()
 }
@@ -8,12 +10,15 @@ function getSupabaseFunctionUrl(fnName) {
   return `${base.replace(/\/+$/, '')}/functions/v1/${fnName}`
 }
 
-function getSupabaseAuthHeaders() {
+async function getSupabaseAuthHeaders() {
+  const sb = getSupabaseClient()
   const anonKey = sanitize(import.meta.env.VITE_SUPABASE_ANON_KEY || '')
-  if (!anonKey) return {}
+  const session = sb ? (await sb.auth.getSession()).data?.session : null
+  const accessToken = sanitize(session?.access_token || '')
+  if (!anonKey || !accessToken) return {}
   return {
     apikey: anonKey,
-    Authorization: `Bearer ${anonKey}`,
+    Authorization: `Bearer ${accessToken}`,
   }
 }
 
@@ -23,7 +28,7 @@ export async function requestSupabaseDsarExport(user) {
   try {
     const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getSupabaseAuthHeaders() },
+      headers: { 'Content-Type': 'application/json', ...(await getSupabaseAuthHeaders()) },
       body: JSON.stringify({ userId: user?.id, email: user?.email }),
     })
     const data = await res.json().catch(() => null)
@@ -40,7 +45,7 @@ export async function requestSupabaseDsarDelete(user) {
   try {
     const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getSupabaseAuthHeaders() },
+      headers: { 'Content-Type': 'application/json', ...(await getSupabaseAuthHeaders()) },
       body: JSON.stringify({ userId: user?.id, email: user?.email }),
     })
     const data = await res.json().catch(() => null)
