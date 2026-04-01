@@ -759,11 +759,21 @@ export function HospitalProvider({ children }) {
           return
         }
       }
+
+      // Do not fabricate a joined hospital from user profile.
+      // This previously caused public hospitals to be overwritten with wrong owner/member state.
+      const isOwnHospital = !!user?.ownedHospital && user?.ownedHospital?.id === user?.hospitalId
+      if (!isOwnHospital) {
+        setHospital(null)
+        return
+      }
+
       const fresh = createDefaultHospital(user)
-      setHospital(normalizeHospitalState(fresh, user))
-      localStorage.setItem('medisim_hospital_' + fresh.id, JSON.stringify(normalizeHospitalState(fresh, user)))
+      const normalizedFresh = normalizeHospitalState(fresh, user)
+      setHospital(normalizedFresh)
+      localStorage.setItem('medisim_hospital_' + fresh.id, JSON.stringify(normalizedFresh))
       if (sb) {
-        upsertHospitalState(normalizeHospitalState(fresh, user)).catch(() => {})
+        upsertHospitalState(normalizedFresh).catch(() => {})
       }
     })()
     return () => { cancelled = true }

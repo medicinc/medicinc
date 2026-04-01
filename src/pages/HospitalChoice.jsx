@@ -31,14 +31,15 @@ export default function HospitalChoice() {
       const mapped = (data || []).map(h => ({
         id: h.id,
         name: h.name,
-        owner: h.state?.members?.find(m => m.userId === h.owner_id)?.name || 'Leitung',
+        owner: h.state?.members?.find(m => m.userId === h.owner_id)?.name
+          || (h.owner_id ? 'Leitung' : 'Staat'),
         members: h.state?.members?.length || 0,
         maxMembers: h.max_members || h.state?.settings?.maxMembers || 20,
         level: h.state?.settings?.level || 1,
         reputation: h.state?.settings?.reputation || 0,
         city: h.city || h.state?.settings?.city || '—',
         specialty: h.specialty || h.state?.settings?.specialty || 'Allgemeinmedizin',
-        open: h.state?.settings?.isPublic !== false,
+        open: h.is_public !== false,
       }))
       setHospitals(mapped)
       setLoading(false)
