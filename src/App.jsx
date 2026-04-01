@@ -92,7 +92,7 @@ function RescueLicenseRoute({ children }) {
 
 function PublicRoute({ children }) {
   const { isAuthenticated, authLoading } = useAuth()
-  if (authLoading) return <div className="py-10 text-center text-surface-500">Lade Sitzung...</div>
+  if (authLoading) return children
   return isAuthenticated ? <Navigate to="/dashboard" replace /> : children
 }
 
