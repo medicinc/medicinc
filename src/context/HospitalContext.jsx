@@ -602,6 +602,7 @@ export function HospitalProvider({ children }) {
   const cloudSyncTimerRef = useRef(null)
   const syncInFlightRef = useRef(false)
   const pendingSyncStateRef = useRef(null)
+  const latestHospitalRef = useRef(hospital)
   const isHospitalSyncLeader = useMemo(() => {
     if (!hospital?.id) return false
     // In local-only mode, keep single-device behavior unchanged.
@@ -617,6 +618,10 @@ export function HospitalProvider({ children }) {
       .sort()
     return memberIds[0] === currentUserId
   }, [hospital?.id, hospital?.ownerId, hospital?.members, user?.id])
+
+  useEffect(() => {
+    latestHospitalRef.current = hospital
+  }, [hospital])
   const withDebtSpendPopup = useCallback((prev, updated, spendLabel = 'Einkauf') => {
     if (Number(prev?.balance || 0) >= 0) return updated
     return {
@@ -649,6 +654,34 @@ export function HospitalProvider({ children }) {
     hospitalMedicationSafetyRef.current = {}
     hospitalPoliceCooldownRef.current = {}
   }, [hospital?.id])
+
+  useEffect(() => {
+    if (!hospital?.id || !user?.id) return
+    setHospital((prev) => {
+      if (!prev) return prev
+      let changed = false
+      const members = (prev.members || []).map((m) => {
+        if (String(m?.userId || '') !== String(user.id)) return m
+        const nextName = user?.name || m?.name || 'Unbekannt'
+        const nextRank = user?.title || m?.rank || null
+        if (m.name !== nextName || m.rank !== nextRank) {
+          changed = true
+          return { ...m, name: nextName, rank: nextRank }
+        }
+        return m
+      })
+      const dutyRoster = { ...(prev.dutyRoster || {}) }
+      const ownDuty = dutyRoster[user.id]
+      if (ownDuty && ownDuty.name !== user?.name) {
+        dutyRoster[user.id] = { ...ownDuty, name: user?.name || ownDuty.name || 'Unbekannt', rank: user?.title || ownDuty.rank || null }
+        changed = true
+      }
+      if (!changed) return prev
+      const updated = { ...prev, members, dutyRoster }
+      localStorage.setItem('medisim_hospital_' + updated.id, JSON.stringify(updated))
+      return updated
+    })
+  }, [hospital?.id, user?.id, user?.name, user?.title])
 
   const triggerHospitalPoliceWithCooldown = useCallback((key, payload, cooldownMs = 120000) => {
     const nowMs = Date.now()
@@ -829,7 +862,9 @@ export function HospitalProvider({ children }) {
       if (cancelled || !data?.state) return
       const remote = normalizeHospitalState(data.state, user)
       const remoteSig = JSON.stringify({ ...remote, _syncVersion: undefined, _updatedAt: undefined })
-      const localSig = JSON.stringify({ ...hospital, _syncVersion: undefined, _updatedAt: undefined })
+      const localSnapshot = latestHospitalRef.current
+      if (!localSnapshot?.id) return
+      const localSig = JSON.stringify({ ...localSnapshot, _syncVersion: undefined, _updatedAt: undefined })
       if (remoteSig !== localSig) {
         remoteSignatureRef.current = remoteSig
         lastSyncedSignatureRef.current = remoteSig
@@ -841,7 +876,7 @@ export function HospitalProvider({ children }) {
       cancelled = true
       clearInterval(refreshTimer)
     }
-  }, [user?.hospitalId, hospital, user])
+  }, [user?.hospitalId, hospital?.id, user])
 
   useEffect(() => {
     if (!hospital?.id) return

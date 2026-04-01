@@ -150,7 +150,7 @@ export default function Hospital() {
     triagePatient, moveToWaiting, moveToTreatment, dischargePatient,
     addRoom, removeRoom, addTreatmentRoom, addEquipmentToRoom, purchaseStationEquipment, removeEquipmentFromRoom, updateTreatmentRoomEquipmentState,
     assignPatientToTreatmentRoom, removePatientFromRoom,
-    toggleClosed, dismissEvent, dismissAlert,
+    toggleClosed,
     updateMemberPermissions, setMemberRole, canReceivePatients, hasReceivingInfrastructure,
     leaveHospital, disbandHospital,
     depositToHospital, takeLoan, repayLoan, updateRevenueDistribution,
@@ -184,6 +184,8 @@ export default function Hospital() {
   const [roomRemoveConfirmText, setRoomRemoveConfirmText] = useState('')
   const [roomRemoveArmed, setRoomRemoveArmed] = useState(false)
   const [hireResult, setHireResult] = useState(null)
+  const uiDismissKey = useMemo(() => `medisim_hospital_ui_dismiss_${user?.id || 'anon'}_${hospital?.id || 'none'}`, [user?.id, hospital?.id])
+  const [dismissedUi, setDismissedUi] = useState({ alerts: {}, event: {} })
   const [editPermsFor, setEditPermsFor] = useState(null)
   const [triageModal, setTriageModal] = useState(null)
   const [assignModal, setAssignModal] = useState(null)
@@ -539,6 +541,26 @@ export default function Hospital() {
   const knownAlertIdsRef = useRef(new Set((hospital?.alertQueue || []).map(a => a.id)))
 
   useEffect(() => {
+    try {
+      const raw = localStorage.getItem(uiDismissKey)
+      const parsed = raw ? JSON.parse(raw) : null
+      setDismissedUi(parsed && typeof parsed === 'object'
+        ? { alerts: parsed.alerts || {}, event: parsed.event || {} }
+        : { alerts: {}, event: {} })
+    } catch (_e) {
+      setDismissedUi({ alerts: {}, event: {} })
+    }
+  }, [uiDismissKey])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(uiDismissKey, JSON.stringify(dismissedUi || { alerts: {}, event: {} }))
+    } catch (_e) {
+      // ignore storage quota errors
+    }
+  }, [uiDismissKey, dismissedUi])
+
+  useEffect(() => {
     if (!hospital) return
     const known = knownPatientIdsRef.current
     const incomingAmbulance = (hospital.patients || []).find(p => !known.has(p.id) && p.arrivalType === 'ambulance')
@@ -734,7 +756,40 @@ export default function Hospital() {
   const selectedBulkMeds = filteredMedications.filter(m => !!bulkMedSelection[m.id] && !m.requiresBtm)
   const bulkTotalCost = selectedBulkMeds.reduce((sum, med) => sum + (Number(med.costPerUnit || 0) * Math.max(1, Number(bulkMedQty || 1))), 0)
   const erDutyCount = Object.values(dutyRoster).filter(entry => entry?.active && entry?.stationId === 'er').length
-  const alertQueue = hospital.alertQueue || []
+  const dismissAlertLocal = (alertId) => {
+    if (!alertId || !hospital?.id) return
+    setDismissedUi((prev) => ({
+      ...(prev || {}),
+      alerts: {
+        ...(prev?.alerts || {}),
+        [hospital.id]: {
+          ...((prev?.alerts || {})[hospital.id] || {}),
+          [alertId]: true,
+        },
+      },
+    }))
+  }
+  const dismissEventLocal = () => {
+    const eventId = String(hospital?.activeEvent?.id || hospital?.activeEvent?.timestamp || '')
+    if (!eventId || !hospital?.id) return
+    setDismissedUi((prev) => ({
+      ...(prev || {}),
+      event: {
+        ...(prev?.event || {}),
+        [hospital.id]: {
+          ...((prev?.event || {})[hospital.id] || {}),
+          [eventId]: true,
+        },
+      },
+    }))
+  }
+
+  const alertQueueRaw = hospital.alertQueue || []
+  const dismissedAlertMap = (dismissedUi?.alerts || {})[hospital?.id || ''] || {}
+  const alertQueue = alertQueueRaw.filter((a) => !dismissedAlertMap[a.id])
+  const activeEventId = String(hospital?.activeEvent?.id || hospital?.activeEvent?.timestamp || '')
+  const dismissedEventMap = (dismissedUi?.event || {})[hospital?.id || ''] || {}
+  const visibleActiveEvent = hospital?.activeEvent && !dismissedEventMap[activeEventId] ? hospital.activeEvent : null
   const ivenaQueue = hospital.ivenaQueue || []
   const criticalAlerts = alertQueue.filter(a => a.severity === 'critical')
   const highAlerts = alertQueue.filter(a => a.severity === 'high')
@@ -1440,7 +1495,7 @@ export default function Hospital() {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Mass casualty event banner */}
-      {hospital.activeEvent && (
+      {visibleActiveEvent && (
         <div className="mb-6 bg-red-600 text-white rounded-2xl p-4 shadow-lg shadow-red-600/30 animate-pulse-slow relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-red-700 via-red-600 to-red-700 opacity-50" />
           <div className="relative flex items-start gap-4">
@@ -1448,11 +1503,11 @@ export default function Hospital() {
               <AlertTriangle className="w-7 h-7" />
             </div>
             <div className="flex-1">
-              <p className="font-bold text-lg">{hospital.activeEvent.title}</p>
-              <p className="text-red-100 text-sm mt-1">{hospital.activeEvent.description}</p>
-              <p className="text-red-200 text-xs mt-2">{hospital.activeEvent.patientCount} Patienten eingetroffen &bull; {new Date(hospital.activeEvent.timestamp).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}</p>
+              <p className="font-bold text-lg">{visibleActiveEvent.title}</p>
+              <p className="text-red-100 text-sm mt-1">{visibleActiveEvent.description}</p>
+              <p className="text-red-200 text-xs mt-2">{visibleActiveEvent.patientCount} Patienten eingetroffen &bull; {new Date(visibleActiveEvent.timestamp).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}</p>
             </div>
-            <button onClick={() => dismissEvent()} className="p-1.5 hover:bg-white/20 rounded-lg shrink-0">
+            <button onClick={() => dismissEventLocal()} className="p-1.5 hover:bg-white/20 rounded-lg shrink-0">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -1507,7 +1562,7 @@ export default function Hospital() {
                     Öffnen
                   </button>
                   <button
-                    onClick={() => dismissAlert(alert.id)}
+                    onClick={() => dismissAlertLocal(alert.id)}
                     className="text-xs px-2 py-1 rounded bg-surface-100 text-surface-700 hover:bg-surface-200"
                   >
                     Erledigt
