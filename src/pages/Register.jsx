@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Activity, ArrowRight, Mail, Lock, User } from 'lucide-react'
 import { getSupabaseClient } from '../lib/supabaseClient'
 import { useAuth } from '../context/AuthContext'
+import { hasAllRequiredRegistrationConsents } from '../services/consentService'
 
 export default function Register() {
   const sb = getSupabaseClient()
@@ -11,6 +12,11 @@ export default function Register() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [consents, setConsents] = useState({
+    tosAccepted: false,
+    privacyAccepted: false,
+    aiChatAccepted: false,
+  })
   const [error, setError] = useState('')
   const [info, setInfo] = useState('')
   const [loading, setLoading] = useState(false)
@@ -23,9 +29,13 @@ export default function Register() {
       setError('Registrierung ist nur mit konfiguriertem Supabase-Projekt möglich.')
       return
     }
+    if (!hasAllRequiredRegistrationConsents(consents)) {
+      setError('Bitte allen Pflichtzustimmungen zustimmen (Nutzungsbedingungen, Datenschutz, AI-Hinweise).')
+      return
+    }
     setLoading(true)
     try {
-      await register(name, email, password)
+      await register(name, email, password, consents)
       setInfo('Wenn E-Mail-Bestätigung aktiv ist: bitte Postfach prüfen. Danach kannst du dich einloggen.')
       setTimeout(() => navigate('/login'), 2400)
     } catch (err) {
@@ -125,6 +135,33 @@ export default function Register() {
           <button type="submit" className="btn-primary w-full justify-center" disabled={loading}>
             {loading ? 'Wird registriert…' : 'Registrieren'}
           </button>
+          <label className="flex items-start gap-2 text-xs text-surface-600">
+            <input
+              type="checkbox"
+              checked={consents.tosAccepted}
+              onChange={(e) => setConsents((prev) => ({ ...prev, tosAccepted: e.target.checked }))}
+              className="mt-0.5"
+            />
+            <span>Ich akzeptiere die <Link to="/nutzungsbedingungen" target="_blank" rel="noreferrer" className="underline">Nutzungsbedingungen</Link>. (Pflicht)</span>
+          </label>
+          <label className="flex items-start gap-2 text-xs text-surface-600">
+            <input
+              type="checkbox"
+              checked={consents.privacyAccepted}
+              onChange={(e) => setConsents((prev) => ({ ...prev, privacyAccepted: e.target.checked }))}
+              className="mt-0.5"
+            />
+            <span>Ich habe die <Link to="/datenschutz" target="_blank" rel="noreferrer" className="underline">Datenschutzhinweise</Link> gelesen. (Pflicht)</span>
+          </label>
+          <label className="flex items-start gap-2 text-xs text-surface-600">
+            <input
+              type="checkbox"
+              checked={consents.aiChatAccepted}
+              onChange={(e) => setConsents((prev) => ({ ...prev, aiChatAccepted: e.target.checked }))}
+              className="mt-0.5"
+            />
+            <span>Ich stimme der Nutzung von AI-Simulationsdialogen gemäß <Link to="/ai-hinweise" target="_blank" rel="noreferrer" className="underline">AI-Hinweisen</Link> zu. (Pflicht)</span>
+          </label>
         </form>
 
         <p className="mt-6 text-center text-sm text-surface-500">

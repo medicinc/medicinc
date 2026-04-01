@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { submitWaitlistEntry } from '../services/waitlistService'
 import {
   Activity, Stethoscope, Brain, Heart, Building2, Users,
   Zap, Shield, BookOpen, ArrowRight, Star, ChevronRight, Trophy,
@@ -68,13 +69,46 @@ export default function Landing() {
     role: '',
     platform: '',
     note: '',
-    alphaConsent: false,
-    updateConsent: false,
+    consentTos: false,
+    consentPrivacy: false,
+    consentAiChat: false,
+    consentUpdates: false,
   })
+  const [waitlistLoading, setWaitlistLoading] = useState(false)
+  const [waitlistError, setWaitlistError] = useState('')
+  const [waitlistInfo, setWaitlistInfo] = useState('')
 
-  const submitWaitlist = (event) => {
+  const submitWaitlist = async (event) => {
     event.preventDefault()
-    if (!waitlistForm.name.trim() || !waitlistForm.email.trim() || !waitlistForm.alphaConsent) return
+    setWaitlistError('')
+    setWaitlistInfo('')
+    if (!waitlistForm.name.trim() || !waitlistForm.email.trim()) {
+      setWaitlistError('Bitte Name und E-Mail ausfüllen.')
+      return
+    }
+    if (!waitlistForm.consentTos || !waitlistForm.consentPrivacy || !waitlistForm.consentAiChat) {
+      setWaitlistError('Bitte alle Pflichtzustimmungen bestätigen.')
+      return
+    }
+    setWaitlistLoading(true)
+    const res = await submitWaitlistEntry({
+      name: waitlistForm.name,
+      email: waitlistForm.email,
+      roleInterest: waitlistForm.role,
+      platform: waitlistForm.platform,
+      note: waitlistForm.note,
+      consentTos: waitlistForm.consentTos,
+      consentPrivacy: waitlistForm.consentPrivacy,
+      consentAiChat: waitlistForm.consentAiChat,
+      consentUpdates: waitlistForm.consentUpdates,
+      source: 'landing_modal',
+    })
+    setWaitlistLoading(false)
+    if (!res?.ok) {
+      setWaitlistError(res?.message || 'Eintragung fehlgeschlagen. Bitte später erneut versuchen.')
+      return
+    }
+    setWaitlistInfo('Fast geschafft: Bitte bestätige jetzt deine E-Mail über den Link in deinem Postfach.')
     setWaitlistDone(true)
     setTimeout(() => {
       setWaitlistOpen(false)
@@ -85,10 +119,14 @@ export default function Landing() {
         role: '',
         platform: '',
         note: '',
-        alphaConsent: false,
-        updateConsent: false,
+        consentTos: false,
+        consentPrivacy: false,
+        consentAiChat: false,
+        consentUpdates: false,
       })
-    }, 1300)
+      setWaitlistError('')
+      setWaitlistInfo('')
+    }, 1800)
   }
 
   return (
@@ -407,8 +445,14 @@ export default function Landing() {
             {!waitlistDone ? (
               <form onSubmit={submitWaitlist} className="space-y-3">
                 <p className="text-sm text-surface-600">
-                  Trag dich ein und erhalte zum Alpha-Release Zugriffsinfos und Updates.
+                  Trag dich ein, bestätige deine E-Mail und erhalte zum Alpha-Release deine Zugriffsinfos.
                 </p>
+                {waitlistError && (
+                  <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">{waitlistError}</div>
+                )}
+                {waitlistInfo && (
+                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">{waitlistInfo}</div>
+                )}
                 <div>
                   <label className="text-xs font-medium text-surface-600">Name</label>
                   <div className="relative mt-1">
@@ -464,34 +508,60 @@ export default function Landing() {
                 <label className="flex items-start gap-2 text-xs text-surface-600">
                   <input
                     type="checkbox"
-                    checked={waitlistForm.alphaConsent}
-                    onChange={(e) => setWaitlistForm((p) => ({ ...p, alphaConsent: e.target.checked }))}
+                    checked={waitlistForm.consentTos}
+                    onChange={(e) => setWaitlistForm((p) => ({ ...p, consentTos: e.target.checked }))}
                     className="mt-0.5"
                   />
-                  <span>Ich möchte per E-Mail über den Alpha-Start informiert werden.</span>
+                  <span>
+                    Ich akzeptiere die <Link to="/nutzungsbedingungen" className="underline" target="_blank" rel="noreferrer">Nutzungsbedingungen</Link>. (Pflicht)
+                  </span>
                 </label>
                 <label className="flex items-start gap-2 text-xs text-surface-600">
                   <input
                     type="checkbox"
-                    checked={waitlistForm.updateConsent}
-                    onChange={(e) => setWaitlistForm((p) => ({ ...p, updateConsent: e.target.checked }))}
+                    checked={waitlistForm.consentPrivacy}
+                    onChange={(e) => setWaitlistForm((p) => ({ ...p, consentPrivacy: e.target.checked }))}
                     className="mt-0.5"
                   />
-                  <span>Ich möchte gelegentlich Produkt-Updates und Dev-Logs erhalten.</span>
+                  <span>
+                    Ich habe die <Link to="/datenschutz" className="underline" target="_blank" rel="noreferrer">Datenschutzhinweise</Link> gelesen. (Pflicht)
+                  </span>
+                </label>
+                <label className="flex items-start gap-2 text-xs text-surface-600">
+                  <input
+                    type="checkbox"
+                    checked={waitlistForm.consentAiChat}
+                    onChange={(e) => setWaitlistForm((p) => ({ ...p, consentAiChat: e.target.checked }))}
+                    className="mt-0.5"
+                  />
+                  <span>
+                    Ich stimme der Nutzung von AI-Simulationsdialogen gemäß <Link to="/ai-hinweise" className="underline" target="_blank" rel="noreferrer">AI-Hinweisen</Link> zu. (Pflicht)
+                  </span>
+                </label>
+                <label className="flex items-start gap-2 text-xs text-surface-600">
+                  <input
+                    type="checkbox"
+                    checked={waitlistForm.consentUpdates}
+                    onChange={(e) => setWaitlistForm((p) => ({ ...p, consentUpdates: e.target.checked }))}
+                    className="mt-0.5"
+                  />
+                  <span>Ich möchte zusätzlich gelegentliche Produkt-Updates und Dev-Logs erhalten. (optional)</span>
                 </label>
                 <p className="text-xs text-surface-500">
-                  Hinweis: Die Warteliste ist unverbindlich. Kein Kauf, keine Zahlung. Details in Datenschutz und Nutzungsbedingungen.
+                  Hinweis: Die Warteliste ist unverbindlich. Nach Absenden erhältst du eine Bestätigungs-E-Mail (Double-Opt-In).
                 </p>
                 <div className="flex gap-2 pt-1">
                   <button type="button" onClick={() => setWaitlistOpen(false)} className="btn-secondary flex-1">Abbrechen</button>
-                  <button type="submit" className="btn-primary flex-1">Unverbindlich vormerken</button>
+                  <button type="submit" className="btn-primary flex-1" disabled={waitlistLoading}>
+                    {waitlistLoading ? 'Wird eingetragen…' : 'Unverbindlich vormerken'}
+                  </button>
                 </div>
               </form>
             ) : (
               <div className="py-8 text-center">
                 <CheckCircle2 className="w-10 h-10 mx-auto text-emerald-600 mb-3" />
-                <p className="font-semibold text-surface-900">Du bist auf der Warteliste</p>
-                <p className="text-sm text-surface-500 mt-1">Danke! Wir melden uns zum Alpha-Release mit den nächsten Schritten.</p>
+                <p className="font-semibold text-surface-900">Bitte E-Mail bestätigen</p>
+                <p className="text-sm text-surface-500 mt-1">Danke! Wir haben dir einen Bestätigungslink gesendet. Erst danach ist dein Wartelistenplatz aktiv.</p>
               </div>
             )}
           </div>

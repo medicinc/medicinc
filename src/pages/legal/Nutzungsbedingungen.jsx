@@ -1,15 +1,45 @@
 export default function Nutzungsbedingungen() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <div className="card p-6 sm:p-8 space-y-4">
+      <div className="card p-6 sm:p-8 space-y-4 text-sm text-surface-700">
         <h1 className="font-display text-3xl font-bold text-surface-900">Nutzungsbedingungen</h1>
-        <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-          Platzhalterfassung für Testbetrieb. Vor Veröffentlichung rechtlich finalisieren.
+        <p>Stand: 01.04.2026</p>
+        <p>
+          Medic Inc ist eine Lern- und Simulationsplattform. Inhalte dienen ausschließlich der Simulation und ersetzen keine
+          medizinische, rechtliche oder sonstige professionelle Beratung.
         </p>
-        <p className="text-sm text-surface-700">Medic Inc ist eine Simulation. Kein Medizinprodukt, keine Behandlungsempfehlung, kein Echtbetrieb.</p>
-        <p className="text-sm text-surface-700">Virtuelle Güter und Spielwährung sind kontogebundene digitale Nutzungsrechte ohne Auszahlung in Echtgeld.</p>
-        <p className="text-sm text-surface-700">Verstöße gegen Community-Regeln können zur Sperrung von Inhalten oder Accounts führen.</p>
-        <p className="text-sm text-surface-700">Die Plattform kann Inhalte und Balancing jederzeit anpassen.</p>
+        <h2 className="font-semibold text-surface-900">1. Nutzung und Zugang</h2>
+        <p>
+          Die Alpha kann zugangsbeschränkt betrieben werden. Ein Wartelisten-Eintrag begründet keinen Anspruch auf Freischaltung.
+          Zugangsdaten sind vertraulich zu behandeln.
+        </p>
+        <h2 className="font-semibold text-surface-900">2. Simulationscharakter</h2>
+        <p>
+          Alle Fälle, Daten und Dialoge sind simulativ. Kein Echtbetrieb, kein Medizinprodukt, keine Handlungsanweisung für reale
+          Patientensituationen.
+        </p>
+        <h2 className="font-semibold text-surface-900">3. AI-Simulationsdialoge</h2>
+        <p>
+          Für Chat-/Dialogfunktionen können AI-Dienste eingesetzt werden. Es werden minimierte Simulationsdaten verarbeitet.
+          AI-Ausgaben können fehlerhaft sein.
+        </p>
+        <h2 className="font-semibold text-surface-900">4. Nutzerverhalten</h2>
+        <p>
+          Unzulässig sind insbesondere Missbrauch, Angriffe auf die Plattform, Umgehung von Zugriffsbeschränkungen und die Eingabe
+          echter personenbezogener Patientendaten.
+        </p>
+        <h2 className="font-semibold text-surface-900">5. Virtuelle Inhalte</h2>
+        <p>
+          Virtuelle Güter, Spielwährung und Fortschritt sind kontogebundene Nutzungsrechte ohne Anspruch auf Barauszahlung.
+        </p>
+        <h2 className="font-semibold text-surface-900">6. Änderungen und Verfügbarkeit</h2>
+        <p>
+          Funktionen, Balancing, Inhalte und Verfügbarkeit können jederzeit angepasst oder vorübergehend eingeschränkt werden.
+        </p>
+        <h2 className="font-semibold text-surface-900">7. Kontakt</h2>
+        <p>
+          Betreiber- und Kontaktangaben siehe Impressum. Für Sicherheitsmeldungen: security@medicinc.de.
+        </p>
       </div>
     </div>
   )

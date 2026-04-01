@@ -384,7 +384,7 @@ export function AuthProvider({ children }) {
     return parsed
   }, [bootstrapFixedAccounts, persist])
 
-  const register = useCallback(async (name, email, password) => {
+  const register = useCallback(async (name, email, password, consents = {}) => {
     const sb = getSupabaseClient()
     if (!sb) {
       void name
@@ -395,7 +395,15 @@ export function AuthProvider({ children }) {
     const { error } = await sb.auth.signUp({
       email: String(email).trim().toLowerCase(),
       password: String(password),
-      options: { data: { display_name: name } },
+      options: {
+        data: {
+          display_name: name,
+          tos_accepted: !!consents?.tosAccepted,
+          privacy_accepted: !!consents?.privacyAccepted,
+          ai_chat_accepted: !!consents?.aiChatAccepted,
+          consent_version: '2026-04-01',
+        },
+      },
     })
     if (error) throw new Error(error.message || 'Registrierung fehlgeschlagen.')
   }, [])
