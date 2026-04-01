@@ -4899,6 +4899,7 @@ export function HospitalProvider({ children }) {
     }
     const effectiveCost = meta?.fromTriage ? 0 : getLabOrderCost(cost || 0, user)
     let success = false
+    let failReason = null
     setHospital(prev => {
       if (!prev) return prev
       const hasLabRoom = (prev.rooms || []).some(r => r.id === 'lab')
