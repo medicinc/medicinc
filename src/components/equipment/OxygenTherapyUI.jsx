@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Wind, Power, Gauge, Play, Pause, AlertTriangle, Settings2 } from 'lucide-react'
 
 const OXYGEN_MODES = [
@@ -28,6 +28,32 @@ export default function OxygenTherapyUI({ patient, onAction, savedState, onSaveS
     () => OXYGEN_MODES.find(m => m.id === modeId) || OXYGEN_MODES[0],
     [modeId]
   )
+  const hydratingFromRemoteRef = useRef(false)
+
+  useEffect(() => {
+    if (!savedState || typeof savedState !== 'object') return
+    hydratingFromRemoteRef.current = true
+    setPowered(!!savedState.powered)
+    setRunning(!!savedState.running)
+    setModeId(savedState.modeId || 'nasal_cannula')
+    setSettings(savedState.settings && typeof savedState.settings === 'object'
+      ? {
+        flow: Number(savedState.settings.flow ?? 2),
+        fio2: Number(savedState.settings.fio2 ?? 28),
+        peep: Number(savedState.settings.peep ?? 5),
+        pressureSupport: Number(savedState.settings.pressureSupport ?? 8),
+        peakPressure: Number(savedState.settings.peakPressure ?? 18),
+      }
+      : {
+        flow: 2,
+        fio2: 28,
+        peep: 5,
+        pressureSupport: 8,
+        peakPressure: 18,
+      })
+    const t = setTimeout(() => { hydratingFromRemoteRef.current = false }, 0)
+    return () => clearTimeout(t)
+  }, [savedState?.updatedAt])
 
   const setField = (field, next, min, max) => {
     setSettings(prev => ({ ...prev, [field]: clamp(next, min, max) }))
@@ -62,6 +88,7 @@ export default function OxygenTherapyUI({ patient, onAction, savedState, onSaveS
   }, [mode.id])
 
   useEffect(() => {
+    if (hydratingFromRemoteRef.current) return
     onSaveState?.({ powered, running, modeId, settings })
   }, [powered, running, modeId, settings, onSaveState])
 
