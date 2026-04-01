@@ -36,8 +36,8 @@ export default function Navbar() {
 
   const isActive = (path) => location.pathname === path
 
-  const handleLogout = () => {
-    logout()
+  const handleLogout = async () => {
+    await logout()
     navigate('/')
     setProfileOpen(false)
   }

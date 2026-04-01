@@ -3,7 +3,6 @@ import { useAuth } from '../context/AuthContext'
 import { Save, Settings as SettingsIcon, Check, RotateCcw, Shield, Download, Trash2 } from 'lucide-react'
 import { exportUserDataBundle } from '../services/profileService'
 import { requestSupabaseDsarDelete, requestSupabaseDsarExport } from '../services/dsarService'
-import { runAiChatDiagnostics } from '../services/patientChatAiService'
 
 export default function Settings() {
   const { user, updateUser, deleteUserAccountData } = useAuth()
@@ -15,8 +14,6 @@ export default function Settings() {
   const [reducedIntensity, setReducedIntensity] = useState(() => {
     try { return localStorage.getItem('medisim_content_intensity') === 'reduced' } catch { return false }
   })
-  const [aiDebugRunning, setAiDebugRunning] = useState(false)
-  const [aiDebugResult, setAiDebugResult] = useState(null)
 
   const saveSettings = async () => {
     const nextBlocks = String(textBlocks || '')
@@ -54,14 +51,6 @@ export default function Settings() {
       setPrivacyInfo('Speichern nicht möglich (Storage blockiert).')
       setTimeout(() => setPrivacyInfo(''), 2600)
     }
-  }
-
-  const runAiDebug = async () => {
-    setAiDebugRunning(true)
-    setAiDebugResult(null)
-    const diagnostic = await runAiChatDiagnostics()
-    setAiDebugResult(diagnostic)
-    setAiDebugRunning(false)
   }
 
   const exportData = async () => {
@@ -168,29 +157,8 @@ export default function Settings() {
         </label>
         <div className="flex flex-wrap gap-2">
           <button onClick={savePrivacyPreferences} className="btn-secondary">Präferenzen speichern</button>
-          <button onClick={runAiDebug} className="btn-secondary" disabled={aiDebugRunning}>
-            {aiDebugRunning ? 'AI-Debug läuft...' : 'AI-Debug ausführen'}
-          </button>
           <button onClick={exportData} className="btn-secondary"><Download className="w-4 h-4" /> Datenexport (JSON)</button>
         </div>
-        {aiDebugResult && (
-          <div className="rounded-xl border border-surface-200 bg-surface-50 p-3 text-xs text-surface-700 space-y-1">
-            <p className="font-semibold text-surface-900">AI-Debug Ergebnis</p>
-            <p>configured: {String(aiDebugResult.configured)}</p>
-            <p>supabaseUrl: {aiDebugResult.supabaseUrl || 'n/a'}</p>
-            <p>anonKeyPresent: {String(aiDebugResult.anonKeyPresent)}</p>
-            <p>sessionPresent: {String(aiDebugResult.sessionPresent)}</p>
-            <p>authHeaderAttached: {String(aiDebugResult.authHeaderAttached)}</p>
-            <p>tokenLooksJwt: {String(aiDebugResult.tokenLooksJwt)}</p>
-            <p>tokenExp: {aiDebugResult.tokenExp || 'n/a'}</p>
-            <p>userResolved: {String(aiDebugResult.userResolved)}</p>
-            <p>functionInvokeOk: {String(aiDebugResult.functionInvokeOk)}</p>
-            <p>functionStatus: {aiDebugResult.functionStatus ?? 'n/a'}</p>
-            <p>functionError: {aiDebugResult.functionError || 'n/a'}</p>
-            <p>directFetchStatus: {aiDebugResult.directFetchStatus ?? 'n/a'}</p>
-            <p>directFetchError: {aiDebugResult.directFetchError || 'n/a'}</p>
-          </div>
-        )}
         <div className="rounded-xl border border-red-200 bg-red-50 p-3 space-y-2">
           <p className="text-sm text-red-700 font-medium">Konto-/Profildaten löschen</p>
           <p className="text-xs text-red-600">Zur Bestätigung bitte LÖSCHEN eingeben.</p>

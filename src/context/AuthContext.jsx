@@ -556,9 +556,27 @@ export function AuthProvider({ children }) {
 
   const logout = useCallback(async () => {
     const sb = getSupabaseClient()
-    if (sb) await sb.auth.signOut()
-    setUser(null)
-    localStorage.removeItem('medisim_user')
+    try {
+      if (sb) {
+        const { error } = await sb.auth.signOut()
+        if (error) {
+          // Keep going with local cleanup even if remote sign-out fails.
+        }
+      }
+    } catch (_error) {
+      // Keep going with local cleanup.
+    } finally {
+      setUser(null)
+      localStorage.removeItem('medisim_user')
+      // Remove persisted Supabase auth tokens to enforce logout on this device.
+      try {
+        Object.keys(localStorage)
+          .filter((key) => key.startsWith('sb-') && key.endsWith('-auth-token'))
+          .forEach((key) => localStorage.removeItem(key))
+      } catch (_storageError) {
+        // Ignore storage access issues.
+      }
+    }
   }, [])
 
   const deleteUserAccountData = useCallback(async () => {
