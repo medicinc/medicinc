@@ -3,26 +3,20 @@ import { useAuth } from '../context/AuthContext'
 import { Save, Settings as SettingsIcon, Check, RotateCcw, Shield, Download, Trash2 } from 'lucide-react'
 import { exportUserDataBundle } from '../services/profileService'
 import { requestSupabaseDsarDelete, requestSupabaseDsarExport } from '../services/dsarService'
+import { runAiChatDiagnostics } from '../services/patientChatAiService'
 
 export default function Settings() {
   const { user, updateUser, deleteUserAccountData } = useAuth()
-  const readAiConsent = () => {
-    try {
-      const raw = String(localStorage.getItem('medisim_ai_consent') || '').trim().toLowerCase()
-      return raw === 'granted' || raw === 'true' || raw === '1' || raw === 'yes' || raw === 'on'
-    } catch {
-      return false
-    }
-  }
   const [textBlocks, setTextBlocks] = useState(Array.isArray(user?.documentTextBlocks) ? user.documentTextBlocks.join('\n') : '')
   const [saved, setSaved] = useState(false)
   const [tutorialResetInfo, setTutorialResetInfo] = useState('')
   const [privacyInfo, setPrivacyInfo] = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState('')
-  const [aiConsent, setAiConsent] = useState(() => readAiConsent())
   const [reducedIntensity, setReducedIntensity] = useState(() => {
     try { return localStorage.getItem('medisim_content_intensity') === 'reduced' } catch { return false }
   })
+  const [aiDebugRunning, setAiDebugRunning] = useState(false)
+  const [aiDebugResult, setAiDebugResult] = useState(null)
 
   const saveSettings = async () => {
     const nextBlocks = String(textBlocks || '')
@@ -53,14 +47,21 @@ export default function Settings() {
 
   const savePrivacyPreferences = () => {
     try {
-      localStorage.setItem('medisim_ai_consent', aiConsent ? 'granted' : 'denied')
       localStorage.setItem('medisim_content_intensity', reducedIntensity ? 'reduced' : 'default')
-      setPrivacyInfo('Datenschutz- und Jugendschutz-Präferenzen gespeichert.')
+      setPrivacyInfo('Jugendschutz-Präferenzen gespeichert.')
       setTimeout(() => setPrivacyInfo(''), 2600)
     } catch {
       setPrivacyInfo('Speichern nicht möglich (Storage blockiert).')
       setTimeout(() => setPrivacyInfo(''), 2600)
     }
+  }
+
+  const runAiDebug = async () => {
+    setAiDebugRunning(true)
+    setAiDebugResult(null)
+    const diagnostic = await runAiChatDiagnostics()
+    setAiDebugResult(diagnostic)
+    setAiDebugRunning(false)
   }
 
   const exportData = async () => {
@@ -162,17 +163,31 @@ export default function Settings() {
           Diese Funktionen sind publish-ready vorbereitet: lokaler Export/Löschung funktionieren sofort, Supabase-Endpunkte werden bei Deployment genutzt.
         </p>
         <label className="flex items-start gap-3 text-sm text-surface-700">
-          <input type="checkbox" checked={aiConsent} onChange={(e) => setAiConsent(e.target.checked)} className="mt-0.5" />
-          <span>Einwilligung für AI-Simulationsdialoge (über Supabase-Proxy) erteilen.</span>
-        </label>
-        <label className="flex items-start gap-3 text-sm text-surface-700">
           <input type="checkbox" checked={reducedIntensity} onChange={(e) => setReducedIntensity(e.target.checked)} className="mt-0.5" />
           <span>Reduzierte Intensität für medizinische Beschreibungen aktivieren (Jugendschutz-Option).</span>
         </label>
         <div className="flex flex-wrap gap-2">
           <button onClick={savePrivacyPreferences} className="btn-secondary">Präferenzen speichern</button>
+          <button onClick={runAiDebug} className="btn-secondary" disabled={aiDebugRunning}>
+            {aiDebugRunning ? 'AI-Debug läuft...' : 'AI-Debug ausführen'}
+          </button>
           <button onClick={exportData} className="btn-secondary"><Download className="w-4 h-4" /> Datenexport (JSON)</button>
         </div>
+        {aiDebugResult && (
+          <div className="rounded-xl border border-surface-200 bg-surface-50 p-3 text-xs text-surface-700 space-y-1">
+            <p className="font-semibold text-surface-900">AI-Debug Ergebnis</p>
+            <p>configured: {String(aiDebugResult.configured)}</p>
+            <p>supabaseUrl: {aiDebugResult.supabaseUrl || 'n/a'}</p>
+            <p>anonKeyPresent: {String(aiDebugResult.anonKeyPresent)}</p>
+            <p>sessionPresent: {String(aiDebugResult.sessionPresent)}</p>
+            <p>tokenLooksJwt: {String(aiDebugResult.tokenLooksJwt)}</p>
+            <p>tokenExp: {aiDebugResult.tokenExp || 'n/a'}</p>
+            <p>userResolved: {String(aiDebugResult.userResolved)}</p>
+            <p>functionInvokeOk: {String(aiDebugResult.functionInvokeOk)}</p>
+            <p>functionStatus: {aiDebugResult.functionStatus ?? 'n/a'}</p>
+            <p>functionError: {aiDebugResult.functionError || 'n/a'}</p>
+          </div>
+        )}
         <div className="rounded-xl border border-red-200 bg-red-50 p-3 space-y-2">
           <p className="text-sm text-red-700 font-medium">Konto-/Profildaten löschen</p>
           <p className="text-xs text-red-600">Zur Bestätigung bitte LÖSCHEN eingeben.</p>

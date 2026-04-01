@@ -1,5 +1,4 @@
-import { getSupabaseClient } from '../lib/supabaseClient'
-const STORAGE_CONSENT_KEY = 'medisim_ai_consent'
+import { getSupabaseClient, isSupabaseConfigured } from '../lib/supabaseClient'
 
 try {
   localStorage.removeItem('medisim_ai_api_key')
@@ -12,17 +11,8 @@ function sanitizeText(value) {
   return String(value || '').replace(/\s+/g, ' ').trim()
 }
 
-function hasAiConsent() {
-  try {
-    const raw = sanitizeText(localStorage.getItem(STORAGE_CONSENT_KEY) || '').toLowerCase()
-    return raw === 'granted' || raw === 'true' || raw === '1' || raw === 'yes' || raw === 'on'
-  } catch {
-    return false
-  }
-}
-
 export function isAiChatConfigured() {
-  return hasAiConsent()
+  return isSupabaseConfigured()
 }
 
 async function safeReadJson(response) {
@@ -152,7 +142,7 @@ export async function requestAiPatientReply({
     return {
       ok: false,
       error: 'AI_NOT_CONFIGURED',
-      message: 'AI-Dialog ist deaktiviert oder Einwilligung fehlt.',
+      message: 'AI-Dialog ist nicht verfügbar (Supabase nicht konfiguriert).',
     }
   }
   const endpoint = getSupabaseFunctionUrl('patient-chat')
@@ -205,6 +195,87 @@ export async function requestAiPatientReply({
     return { ok: true, text, model: 'proxy', source: 'supabase-function' }
   } catch (error) {
     return { ok: false, error: 'AI_NETWORK', message: String(error?.message || error || 'network') }
+  }
+}
+
+export async function runAiChatDiagnostics() {
+  const sb = getSupabaseClient()
+  const base = sanitizeText(import.meta.env.VITE_SUPABASE_URL || '')
+  const anon = sanitizeText(import.meta.env.VITE_SUPABASE_ANON_KEY || '')
+  const result = {
+    configured: isSupabaseConfigured(),
+    supabaseUrl: base || null,
+    anonKeyPresent: !!anon,
+    sessionPresent: false,
+    tokenLooksJwt: false,
+    tokenExp: null,
+    userResolved: false,
+    functionInvokeOk: false,
+    functionStatus: null,
+    functionError: null,
+  }
+  if (!sb) {
+    result.functionError = 'Supabase-Client nicht initialisiert.'
+    return result
+  }
+
+  const parseJwtExp = (token) => {
+    try {
+      const parts = String(token || '').split('.')
+      if (parts.length !== 3) return null
+      const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')))
+      const exp = Number(payload?.exp || 0)
+      return Number.isFinite(exp) && exp > 0 ? new Date(exp * 1000).toISOString() : null
+    } catch {
+      return null
+    }
+  }
+
+  try {
+    let session = (await sb.auth.getSession()).data?.session || null
+    let token = sanitizeText(session?.access_token || '')
+    result.sessionPresent = !!session
+    result.tokenLooksJwt = token.split('.').length === 3
+    if (!result.tokenLooksJwt) {
+      const refreshed = await sb.auth.refreshSession().catch(() => null)
+      session = refreshed?.data?.session || session
+      token = sanitizeText(session?.access_token || '')
+      result.sessionPresent = !!session
+      result.tokenLooksJwt = token.split('.').length === 3
+    }
+    result.tokenExp = parseJwtExp(token)
+    if (result.tokenLooksJwt) {
+      const authCheck = await sb.auth.getUser(token).catch(() => null)
+      result.userResolved = !!authCheck?.data?.user
+    }
+    const { error } = await sb.functions.invoke('patient-chat', {
+      body: {
+        mode: 'triage',
+        lang: 'de',
+        translatorEnabled: false,
+        doctorMessage: 'Diagnose-Test: Bitte antworte mit einem kurzen Satz.',
+        history: [],
+        patient: {
+          age: 42,
+          gender: 'männlich',
+          chiefComplaint: 'Test',
+          symptoms: ['Test'],
+          vitals: { hr: 80, bp: '120/80', rr: 14, temp: 36.8, spo2: 98 },
+          context: {},
+        },
+      },
+    })
+    if (!error) {
+      result.functionInvokeOk = true
+      return result
+    }
+    result.functionInvokeOk = false
+    result.functionStatus = Number(error?.context?.status || 0) || null
+    result.functionError = sanitizeText(error?.message || 'Unbekannter Function-Fehler')
+    return result
+  } catch (error) {
+    result.functionError = sanitizeText(error?.message || error || 'Unbekannter Fehler')
+    return result
   }
 }
 

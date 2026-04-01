@@ -1,5 +1,4 @@
-import { getSupabaseClient } from '../lib/supabaseClient'
-const STORAGE_CONSENT_KEY = 'medisim_ai_consent'
+import { getSupabaseClient, isSupabaseConfigured } from '../lib/supabaseClient'
 
 try {
   localStorage.removeItem('medisim_ai_api_key')
@@ -9,15 +8,6 @@ try {
 
 function sanitize(text) {
   return String(text || '').replace(/\s+/g, ' ').trim()
-}
-
-function hasAiConsent() {
-  try {
-    const raw = sanitize(localStorage.getItem(STORAGE_CONSENT_KEY) || '').toLowerCase()
-    return raw === 'granted' || raw === 'true' || raw === '1' || raw === 'yes' || raw === 'on'
-  } catch {
-    return false
-  }
 }
 
 async function getSupabaseAuthHeaders() {
@@ -51,8 +41,7 @@ async function getSupabaseAuthHeaders() {
 }
 
 export async function requestDispatchReply({ eventTitle, eventContext = null, userMessage, history = [], signal }) {
-  const aiConsentGranted = hasAiConsent()
-  if (!aiConsentGranted) return { ok: false, message: 'AI-Dialog ist deaktiviert oder Einwilligung fehlt.' }
+  if (!isSupabaseConfigured()) return { ok: false, message: 'AI-Dialog ist nicht verfügbar (Supabase nicht konfiguriert).' }
   const supabaseUrl = sanitize(import.meta.env.VITE_SUPABASE_URL || '')
   if (!supabaseUrl) return { ok: false, message: 'VITE_SUPABASE_URL fehlt.' }
   const endpoint = `${supabaseUrl.replace(/\/+$/, '')}/functions/v1/dispatch-chat`
