@@ -819,6 +819,31 @@ export function HospitalProvider({ children }) {
   }, [user?.hospitalId, hospital?.id, user])
 
   useEffect(() => {
+    if (!user?.hospitalId || !hospital?.id) return
+    const sb = getSupabaseClient()
+    if (!sb) return
+    let cancelled = false
+    const refreshTimer = setInterval(async () => {
+      if (cancelled) return
+      const { data } = await fetchHospitalById(user.hospitalId)
+      if (cancelled || !data?.state) return
+      const remote = normalizeHospitalState(data.state, user)
+      const remoteSig = JSON.stringify({ ...remote, _syncVersion: undefined, _updatedAt: undefined })
+      const localSig = JSON.stringify({ ...hospital, _syncVersion: undefined, _updatedAt: undefined })
+      if (remoteSig !== localSig) {
+        remoteSignatureRef.current = remoteSig
+        lastSyncedSignatureRef.current = remoteSig
+        localStorage.setItem('medisim_hospital_' + remote.id, JSON.stringify(remote))
+        setHospital(remote)
+      }
+    }, 5000)
+    return () => {
+      cancelled = true
+      clearInterval(refreshTimer)
+    }
+  }, [user?.hospitalId, hospital, user])
+
+  useEffect(() => {
     if (!hospital?.id) return
     const sb = getSupabaseClient()
     if (!sb) return

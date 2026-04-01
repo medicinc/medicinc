@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { getCurrentRank } from '../data/ranks'
+import { getSupabaseClient } from '../lib/supabaseClient'
 import {
   Trophy, Medal, Users, Star, TrendingUp, Crown
 } from 'lucide-react'
@@ -20,37 +21,60 @@ export default function Leaderboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const users = []
-    const seen = new Set()
-    for (let i = 0; i < localStorage.length; i += 1) {
-      const key = localStorage.key(i)
-      if (!key || !key.startsWith('medisim_user_')) continue
-      const parsed = safeParseJson(localStorage.getItem(key), null)
-      if (!parsed?.id || seen.has(parsed.id)) continue
-      seen.add(parsed.id)
-      users.push(parsed)
-    }
-    const currentUser = safeParseJson(localStorage.getItem('medisim_user'), null)
-    if (currentUser?.id && !seen.has(currentUser.id)) {
-      users.push(currentUser)
-    }
-
-    const mapped = users
-      .sort((a, b) => (b.xp || 0) - (a.xp || 0))
-      .slice(0, 50)
-      .map((row, idx) => ({
-        position: idx + 1,
-        userId: row.id,
-        name: row.prefix ? `${row.prefix} ${row.name}` : row.name,
-        rank: row.title || getCurrentRank({ xp: row.xp || 0 }).name,
-        hospitalName: row.hospitalName || '—',
-        casesCompleted: row.stats?.casesCompleted || 0,
-        successRate: row.stats?.successRate || 0,
-        reputation: row.stats?.reputation || 0,
-        xp: row.xp || 0,
-      }))
-    setEntries(mapped)
-    setLoading(false)
+    let cancelled = false
+    ;(async () => {
+      const sb = getSupabaseClient()
+      if (sb) {
+        const { data, error } = await sb.rpc('list_leaderboard', { _limit: 50 })
+        if (!cancelled && !error) {
+          const mapped = (data || []).map((row, idx) => ({
+            position: idx + 1,
+            userId: row.user_id,
+            name: row.name,
+            rank: row.title || getCurrentRank({ xp: row.xp || 0 }).name,
+            hospitalName: row.hospital_name || '—',
+            casesCompleted: row.cases_completed || 0,
+            successRate: row.success_rate || 0,
+            reputation: row.reputation || 0,
+            xp: row.xp || 0,
+          }))
+          setEntries(mapped)
+          setLoading(false)
+          return
+        }
+      }
+      const users = []
+      const seen = new Set()
+      for (let i = 0; i < localStorage.length; i += 1) {
+        const key = localStorage.key(i)
+        if (!key || !key.startsWith('medisim_user_')) continue
+        const parsed = safeParseJson(localStorage.getItem(key), null)
+        if (!parsed?.id || seen.has(parsed.id)) continue
+        seen.add(parsed.id)
+        users.push(parsed)
+      }
+      const currentUser = safeParseJson(localStorage.getItem('medisim_user'), null)
+      if (currentUser?.id && !seen.has(currentUser.id)) users.push(currentUser)
+      const mapped = users
+        .sort((a, b) => (b.xp || 0) - (a.xp || 0))
+        .slice(0, 50)
+        .map((row, idx) => ({
+          position: idx + 1,
+          userId: row.id,
+          name: row.prefix ? `${row.prefix} ${row.name}` : row.name,
+          rank: row.title || getCurrentRank({ xp: row.xp || 0 }).name,
+          hospitalName: row.hospitalName || '—',
+          casesCompleted: row.stats?.casesCompleted || 0,
+          successRate: row.stats?.successRate || 0,
+          reputation: row.stats?.reputation || 0,
+          xp: row.xp || 0,
+        }))
+      if (!cancelled) {
+        setEntries(mapped)
+        setLoading(false)
+      }
+    })()
+    return () => { cancelled = true }
   }, [])
 
   const myEntry = useMemo(() => {

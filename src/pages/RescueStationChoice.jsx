@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { listRescueStations } from '../services/rescueStationService'
+import { listRescueStations, subscribeRescueStations } from '../services/rescueStationService'
 import { Ambulance, MapPin, ArrowRight, CheckCircle2, Plus } from 'lucide-react'
 
 export default function RescueStationChoice() {
@@ -12,13 +12,19 @@ export default function RescueStationChoice() {
 
   useEffect(() => {
     let mounted = true
-    listRescueStations().then(({ data }) => {
+    const refresh = async () => {
+      const { data } = await listRescueStations()
       if (!mounted) return
       const rows = data || []
       setStations(rows)
       if (!stationId && rows[0]?.id) setStationId(rows[0].id)
-    })
-    return () => { mounted = false }
+    }
+    refresh()
+    const unsub = subscribeRescueStations(refresh)
+    return () => {
+      mounted = false
+      unsub()
+    }
   }, [])
 
   const selected = useMemo(

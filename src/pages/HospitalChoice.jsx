@@ -80,7 +80,7 @@ export default function HospitalChoice() {
   }
 
   const reportHospital = (hospital, reason = 'Unangemessener Name/Inhalt') => {
-    submitModerationReport({
+    void submitModerationReport({
       targetType: 'hospital',
       targetId: hospital.id,
       targetLabel: hospital.name,

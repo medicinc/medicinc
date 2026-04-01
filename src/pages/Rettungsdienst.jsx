@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import { useHospital } from '../context/HospitalContext'
 import { getRdMoneyBonusPct } from '../data/shopSpecials'
 import { RESCUE_STATIONS, getRescueStationById } from '../data/rescueStations'
-import { listRescueStations } from '../services/rescueStationService'
+import { listRescueStations, subscribeRescueStations } from '../services/rescueStationService'
 import rdCityMapAsset from '../assets/rd-city-map.png'
 import rdCityMapMarkedAsset from '../assets/rd-city-map-marked.png'
 import einsatzFemaleNormalAsset from '../assets/rd-scene/einsatz-female-normal.png'
@@ -1314,11 +1314,17 @@ export default function Rettungsdienst() {
 
   useEffect(() => {
     let mounted = true
-    listRescueStations().then(({ data }) => {
+    const refreshStations = async () => {
+      const { data } = await listRescueStations()
       if (!mounted) return
       setMapStations(data || [])
-    })
-    return () => { mounted = false }
+    }
+    refreshStations()
+    const unsub = subscribeRescueStations(refreshStations)
+    return () => {
+      mounted = false
+      unsub()
+    }
   }, [])
 
   useEffect(() => {
