@@ -54,7 +54,12 @@ export default function HospitalChoice() {
 
   const joinHospital = async (hospital) => {
     if (!user) return
-    await createHospitalMembership(hospital.id, user)
+    setError('')
+    const { error: joinError } = await createHospitalMembership(hospital.id, user)
+    if (joinError) {
+      setError(joinError.message || 'Beitritt zum Krankenhaus fehlgeschlagen.')
+      return
+    }
     await updateUser({
       hospitalId: hospital.id,
       hospitalName: hospital.name,

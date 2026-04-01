@@ -259,6 +259,9 @@ export function AuthProvider({ children }) {
     let cancelled = false
     const sb = getSupabaseClient()
     if (sb) {
+      const loadingGuard = setTimeout(() => {
+        if (!cancelled) setAuthLoading(false)
+      }, 8000)
       ;(async () => {
         setAuthLoading(true)
         try {
@@ -302,6 +305,7 @@ export function AuthProvider({ children }) {
       })
       return () => {
         cancelled = true
+        clearTimeout(loadingGuard)
         sub.subscription.unsubscribe()
       }
     }
