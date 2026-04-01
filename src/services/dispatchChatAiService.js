@@ -23,9 +23,22 @@ function hasAiConsent() {
 async function getSupabaseAuthHeaders() {
   const sb = getSupabaseClient()
   const anonKey = sanitize(import.meta.env.VITE_SUPABASE_ANON_KEY || '')
-  const session = sb ? (await sb.auth.getSession()).data?.session : null
-  const accessToken = sanitize(session?.access_token || '')
-  if (!anonKey || !accessToken) return {}
+  if (!sb || !anonKey) return {}
+  const isLikelyJwt = (token) => String(token || '').split('.').length === 3
+  let session = (await sb.auth.getSession()).data?.session || null
+  let accessToken = sanitize(session?.access_token || '')
+  if (!isLikelyJwt(accessToken)) {
+    const refreshed = await sb.auth.refreshSession().catch(() => null)
+    session = refreshed?.data?.session || session
+    accessToken = sanitize(session?.access_token || '')
+  }
+  if (!isLikelyJwt(accessToken)) return {}
+  const authCheck = await sb.auth.getUser(accessToken).catch(() => null)
+  if (!authCheck?.data?.user) {
+    const refreshed = await sb.auth.refreshSession().catch(() => null)
+    accessToken = sanitize(refreshed?.data?.session?.access_token || '')
+  }
+  if (!isLikelyJwt(accessToken)) return {}
   return {
     apikey: anonKey,
     Authorization: `Bearer ${accessToken}`,
@@ -58,9 +71,13 @@ export async function requestDispatchReply({ eventTitle, eventContext = null, us
     content: sanitize(m.content),
   })).filter((m) => m.content)
   try {
+    const authHeaders = await getSupabaseAuthHeaders()
+    if (!authHeaders.Authorization) {
+      return { ok: false, message: 'Supabase-Session ungültig. Bitte neu einloggen.' }
+    }
     const res = await fetch(endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...(await getSupabaseAuthHeaders()) },
+      headers: { 'Content-Type': 'application/json', ...authHeaders },
       body: JSON.stringify({
         system,
         eventTitle: sanitize(eventTitle),
