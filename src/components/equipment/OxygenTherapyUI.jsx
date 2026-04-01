@@ -29,6 +29,7 @@ export default function OxygenTherapyUI({ patient, onAction, savedState, onSaveS
     [modeId]
   )
   const hydratingFromRemoteRef = useRef(false)
+  const dirtyRef = useRef(false)
 
   useEffect(() => {
     if (!savedState || typeof savedState !== 'object') return
@@ -55,11 +56,17 @@ export default function OxygenTherapyUI({ patient, onAction, savedState, onSaveS
     return () => clearTimeout(t)
   }, [savedState?.updatedAt])
 
+  const markDirty = () => {
+    dirtyRef.current = true
+  }
+
   const setField = (field, next, min, max) => {
+    markDirty()
     setSettings(prev => ({ ...prev, [field]: clamp(next, min, max) }))
   }
 
   const startTherapy = () => {
+    markDirty()
     setRunning(true)
     onAction?.(
       'oxygen_start',
@@ -89,15 +96,12 @@ export default function OxygenTherapyUI({ patient, onAction, savedState, onSaveS
 
   useEffect(() => {
     if (hydratingFromRemoteRef.current) return
+    if (!dirtyRef.current) return
     onSaveState?.({ powered, running, modeId, settings })
   }, [powered, running, modeId, settings, onSaveState])
 
   const highOxygen = settings.fio2 > 60
   const highPressure = mode.allowPressure && (settings.peep > 12 || settings.peakPressure > 30)
-  const spo2Debug = patient?.clinicalState?.spo2Debug || null
-  const lastO2Ts = Date.parse(patient?.clinicalState?.lastOxygenSupportAt || '')
-  const minsSinceO2 = Number.isFinite(lastO2Ts) ? Math.max(0, (Date.now() - lastO2Ts) / 60000) : null
-
   return (
     <div className="p-4 space-y-3">
       <div className={`rounded-2xl border-2 overflow-hidden transition-colors ${powered ? 'border-cyan-500 bg-surface-900' : 'border-surface-300 bg-surface-100'}`}>
@@ -112,7 +116,11 @@ export default function OxygenTherapyUI({ patient, onAction, savedState, onSaveS
               {OXYGEN_MODES.map(m => (
                 <button
                   key={m.id}
-                  onClick={() => !running && setModeId(m.id)}
+                  onClick={() => {
+                    if (running) return
+                    markDirty()
+                    setModeId(m.id)
+                  }}
                   className={`p-2 rounded-lg border text-left transition-colors ${
                     modeId === m.id ? 'border-cyan-400 bg-cyan-500/10 text-cyan-300' : 'border-white/10 bg-white/5 text-white/70 hover:text-white'
                   }`}
@@ -193,6 +201,7 @@ export default function OxygenTherapyUI({ patient, onAction, savedState, onSaveS
       <div className="space-y-2">
         <button
           onClick={() => {
+            markDirty()
             const next = !powered
             setPowered(next)
             if (!next) setRunning(false)
@@ -213,6 +222,7 @@ export default function OxygenTherapyUI({ patient, onAction, savedState, onSaveS
         {powered && running && (
           <button
             onClick={() => {
+              markDirty()
               setRunning(false)
               onAction?.('oxygen_stop', 'Sauerstofftherapie pausiert', 1, 3)
             }}
@@ -228,13 +238,6 @@ export default function OxygenTherapyUI({ patient, onAction, savedState, onSaveS
           <div className="rounded-xl bg-surface-50 border border-surface-200 p-3 text-xs text-surface-600">
             <p className="font-medium text-surface-800 mb-1 flex items-center gap-1"><Wind className="w-3.5 h-3.5" /> Klinischer Hinweis</p>
             <p>Aktuelle SpO2 in Akte: <span className="font-semibold">{patient.vitals?.spo2 ?? '--'}%</span>. Passe Flow/FiO2 und Atemwegsstrategie entsprechend dem Verlauf an.</p>
-          </div>
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-[11px] text-amber-900">
-            <p className="font-semibold mb-1">Debug SpO2-Regelung</p>
-            <p>O2-System: <span className="font-mono">{powered ? (running ? 'ON/RUNNING' : 'ON/PAUSED') : 'OFF'}</span></p>
-            <p>Letzte O2-Unterstützung: <span className="font-mono">{minsSinceO2 == null ? 'n/a' : `${minsSinceO2.toFixed(2)} min`}</span></p>
-            <p>Ziel/Trend: <span className="font-mono">{spo2Debug ? `${spo2Debug.dynamicTarget}% / ${spo2Debug.trend} (${spo2Debug.appliedDelta})` : 'n/a'}</span></p>
-            <p>Kontext: <span className="font-mono">{spo2Debug ? `${spo2Debug.condition}${spo2Debug.isCopdLike ? ' (COPD-like)' : ''}` : 'n/a'}</span></p>
           </div>
         </>
       )}
