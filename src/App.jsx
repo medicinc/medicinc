@@ -28,6 +28,7 @@ import AiHinweise from './pages/legal/AiHinweise'
 import Jugendschutz from './pages/legal/Jugendschutz'
 import CommunityRegeln from './pages/legal/CommunityRegeln'
 import WaitlistConfirm from './pages/WaitlistConfirm'
+import ResetPassword from './pages/ResetPassword'
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, needsOnboarding, needsHospital, needsRescueStation, authLoading } = useAuth()
@@ -107,6 +108,7 @@ export default function App() {
         <Route path="/register-gate" element={<PublicRoute><RegisterGate /></PublicRoute>} />
         <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
         <Route path="/waitlist/confirm" element={<WaitlistConfirm />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/onboarding" element={<OnboardingRoute><Onboarding /></OnboardingRoute>} />
         <Route path="/rescue-station-choice" element={<RescueSetupRoute><RescueStationChoice /></RescueSetupRoute>} />
         <Route path="/rescue-station-create" element={<RescueSetupRoute><RescueStationCreate /></RescueSetupRoute>} />

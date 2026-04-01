@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getSupabaseClient } from '../lib/supabaseClient'
-import { Activity, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
+import { requestPasswordReset } from '../services/authPasswordService'
+import { Activity, Mail, Lock, Eye, EyeOff, ArrowRight, X } from 'lucide-react'
 
 export default function Login() {
   const [identifier, setIdentifier] = useState('')
@@ -10,8 +11,15 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [forgotOpen, setForgotOpen] = useState(false)
+  const [forgotEmail, setForgotEmail] = useState('')
+  const [forgotLoading, setForgotLoading] = useState(false)
+  const [forgotError, setForgotError] = useState('')
+  const [forgotInfo, setForgotInfo] = useState('')
   const { login } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const passwordResetDone = location.state?.passwordReset === true
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -29,6 +37,21 @@ export default function Login() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleForgotSubmit = async (e) => {
+    e.preventDefault()
+    setForgotError('')
+    setForgotInfo('')
+    setForgotLoading(true)
+    const res = await requestPasswordReset(forgotEmail)
+    setForgotLoading(false)
+    if (!res?.ok) {
+      setForgotError(res?.message || 'Anfrage fehlgeschlagen.')
+      return
+    }
+    setForgotInfo('Wenn diese E-Mail bei uns existiert, erhältst du gleich einen Link zum Zurücksetzen.')
+    setForgotEmail('')
   }
 
   return (
@@ -61,6 +84,12 @@ export default function Login() {
               ? 'Mit Supabase-Account (E-Mail/Passwort) oder Demo-Login.'
               : 'Zugriff nur mit freigegebenem Demo-Login (ohne Supabase).'}
           </p>
+
+          {passwordResetDone && (
+            <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-800">
+              Passwort wurde geändert. Du kannst dich jetzt mit dem neuen Passwort anmelden.
+            </div>
+          )}
 
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
@@ -111,7 +140,23 @@ export default function Login() {
                 <input type="checkbox" className="w-4 h-4 rounded border-surface-300 text-primary-600 focus:ring-primary-500" />
                 <span className="text-surface-600">Angemeldet bleiben</span>
               </label>
-              <a href="#" className="text-sm text-primary-600 hover:text-primary-700 font-medium">Passwort vergessen?</a>
+              {getSupabaseClient() ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForgotOpen(true)
+                    setForgotError('')
+                    setForgotInfo('')
+                  }}
+                  className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                >
+                  Passwort vergessen?
+                </button>
+              ) : (
+                <span className="text-sm text-surface-400 cursor-default" title="Nur bei Supabase-Login verfügbar">
+                  Passwort vergessen?
+                </span>
+              )}
             </div>
 
             <button
@@ -157,6 +202,59 @@ export default function Login() {
           </div>
         </div>
       </div>
+
+      {forgotOpen && (
+        <div className="fixed inset-0 z-[130] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setForgotOpen(false)} />
+          <div className="relative w-full max-w-md rounded-2xl border border-surface-200 bg-white p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-display text-lg font-bold text-surface-900">Passwort zurücksetzen</h2>
+              <button
+                type="button"
+                onClick={() => setForgotOpen(false)}
+                className="p-2 rounded-lg hover:bg-surface-100 text-surface-500"
+                aria-label="Schließen"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <p className="text-sm text-surface-600 mb-4">
+              Gib deine E-Mail-Adresse ein. Wir senden dir einen Link zum Setzen eines neuen Passworts (nur Supabase-Konten).
+            </p>
+            {forgotError && (
+              <div className="mb-3 p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">{forgotError}</div>
+            )}
+            {forgotInfo && (
+              <div className="mb-3 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-sm text-emerald-800">{forgotInfo}</div>
+            )}
+            <form onSubmit={handleForgotSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-surface-700 mb-1">E-Mail</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-400" />
+                  <input
+                    type="email"
+                    className="input-field !pl-10"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    required
+                    autoComplete="email"
+                    placeholder="du@beispiel.de"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => setForgotOpen(false)} className="btn-secondary flex-1">
+                  Abbrechen
+                </button>
+                <button type="submit" className="btn-primary flex-1 justify-center" disabled={forgotLoading}>
+                  {forgotLoading ? 'Senden…' : 'Link senden'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

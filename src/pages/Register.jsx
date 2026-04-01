@@ -105,7 +105,7 @@ export default function Register() {
                 onChange={(e) => setName(e.target.value)}
                 required
                 minLength={2}
-                placeholder="Vor- und Nachname"
+                placeholder="Dein Name"
               />
             </div>
           </div>

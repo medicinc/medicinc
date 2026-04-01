@@ -452,7 +452,7 @@ export default function Landing() {
                       className="input-field !pl-9"
                       value={waitlistForm.name}
                       onChange={(e) => setWaitlistForm((p) => ({ ...p, name: e.target.value }))}
-                      placeholder="Dein Vor- und Nachname"
+                      placeholder="Dein Name"
                     />
                   </div>
                 </div>

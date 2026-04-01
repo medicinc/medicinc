@@ -9,6 +9,7 @@
 - `PUBLIC_APP_URL`
 - `WAITLIST_IP_SALT`
 - `WAITLIST_INVITE_TOKEN`
+- `WAITLIST_ADMIN_NOTIFY_EMAIL` (optional: deine private E-Mail für Benachrichtigung bei **neuem** Wartelisten-Eintrag)
 - `ALPHA_REGISTRATION_CODE` (server-only; der Einladungs-String für Alpha-Registrierung)
 - `ALPHA_REGISTRATION_JWT_SECRET` (mindestens 32 Zeichen; zum Signieren des kurz gültigen Registrierungs-Tokens)
 

@@ -85,6 +85,69 @@ async function sendDoiEmail({
   return { ok: true, data }
 }
 
+async function sendAdminWaitlistNotify({
+  resendApiKey,
+  from,
+  to,
+  name,
+  email,
+  roleInterest,
+  platform,
+  note,
+  source,
+}: {
+  resendApiKey: string
+  from: string
+  to: string
+  name: string
+  email: string
+  roleInterest: string
+  platform: string
+  note: string
+  source: string
+}) {
+  const safe = (v: string) => v.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const html = `
+    <div style="font-family:Arial,sans-serif;line-height:1.5;color:#0f172a;max-width:560px">
+      <h2 style="margin:0 0 12px">Neue Alpha-Warteliste</h2>
+      <p style="margin:0 0 8px"><strong>Name:</strong> ${safe(name)}</p>
+      <p style="margin:0 0 8px"><strong>E-Mail:</strong> ${safe(email)}</p>
+      <p style="margin:0 0 8px"><strong>Quelle:</strong> ${safe(source || '—')}</p>
+      <p style="margin:0 0 8px"><strong>Rolle / Interesse:</strong> ${safe(roleInterest || '—')}</p>
+      <p style="margin:0 0 8px"><strong>Plattform:</strong> ${safe(platform || '—')}</p>
+      <p style="margin:12px 0 0"><strong>Notiz:</strong><br/>${safe(note || '—')}</p>
+      <p style="margin:16px 0 0;font-size:12px;color:#64748b">Automatische Benachrichtigung von Medic Inc (waitlist-submit).</p>
+    </div>
+  `
+  const text = [
+    'Neue Alpha-Warteliste',
+    `Name: ${name}`,
+    `E-Mail: ${email}`,
+    `Quelle: ${source || '—'}`,
+    `Rolle/Interesse: ${roleInterest || '—'}`,
+    `Plattform: ${platform || '—'}`,
+    `Notiz: ${note || '—'}`,
+  ].join('\n')
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${resendApiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from,
+      to: [to],
+      subject: `Alpha-Warteliste: ${email}`,
+      html,
+      text,
+    }),
+  })
+  const data = await res.json().catch(() => null)
+  if (!res.ok) {
+    console.error('Admin waitlist notify failed:', sanitize(data?.message || data?.error?.message || 'unknown'))
+  }
+}
+
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: CORS_HEADERS })
   if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405, headers: CORS_HEADERS })
@@ -95,6 +158,7 @@ Deno.serve(async (request) => {
   const mailFrom = sanitize(Deno.env.get('MAIL_FROM') || 'Medic Inc <no-reply@medicinc.de>')
   const publicAppUrl = sanitize(Deno.env.get('PUBLIC_APP_URL') || 'https://www.medicinc.de').replace(/\/+$/, '')
   const ipSalt = sanitize(Deno.env.get('WAITLIST_IP_SALT'))
+  const adminNotifyEmail = sanitize(Deno.env.get('WAITLIST_ADMIN_NOTIFY_EMAIL') || '')
   if (!supabaseUrl || !serviceRole || !resendApiKey || !mailFrom || !publicAppUrl) {
     return Response.json({ message: 'Waitlist-Backend nicht vollständig konfiguriert.' }, { status: 500, headers: CORS_HEADERS })
   }
@@ -218,6 +282,24 @@ Deno.serve(async (request) => {
     name,
   })
   if (!sent.ok) return Response.json({ message: sent.error }, { status: 502, headers: CORS_HEADERS })
+
+  if (adminNotifyEmail && isValidEmail(adminNotifyEmail) && !existing) {
+    try {
+      await sendAdminWaitlistNotify({
+        resendApiKey,
+        from: mailFrom,
+        to: adminNotifyEmail,
+        name,
+        email,
+        roleInterest,
+        platform,
+        note,
+        source,
+      })
+    } catch (_err) {
+      console.error('Admin waitlist notify exception')
+    }
+  }
 
   return Response.json({ ok: true, pendingConfirmation: true, message: 'Bitte bestätige deine E-Mail-Adresse.' }, { headers: CORS_HEADERS })
 })
