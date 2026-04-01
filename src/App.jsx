@@ -29,7 +29,7 @@ import CommunityRegeln from './pages/legal/CommunityRegeln'
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, needsOnboarding, needsHospital, needsRescueStation, authLoading } = useAuth()
-  if (authLoading) return null
+  if (authLoading) return <div className="py-10 text-center text-surface-500">Lade Sitzung...</div>
   if (!isAuthenticated) return <Navigate to="/login" replace />
   if (needsOnboarding) return <Navigate to="/onboarding" replace />
   if (needsHospital) return <Navigate to="/hospital-choice" replace />
@@ -39,7 +39,7 @@ function ProtectedRoute({ children }) {
 
 function OnboardingRoute({ children }) {
   const { isAuthenticated, needsOnboarding, needsRescueStation, needsHospital, authLoading } = useAuth()
-  if (authLoading) return null
+  if (authLoading) return <div className="py-10 text-center text-surface-500">Lade Sitzung...</div>
   if (!isAuthenticated) return <Navigate to="/login" replace />
   if (!needsOnboarding) return <Navigate to={needsHospital ? '/hospital-choice' : (needsRescueStation ? '/rescue-station-choice' : '/dashboard')} replace />
   return children
@@ -47,7 +47,7 @@ function OnboardingRoute({ children }) {
 
 function HospitalSetupRoute({ children }) {
   const { isAuthenticated, needsOnboarding, needsHospital, authLoading } = useAuth()
-  if (authLoading) return null
+  if (authLoading) return <div className="py-10 text-center text-surface-500">Lade Sitzung...</div>
   if (!isAuthenticated) return <Navigate to="/login" replace />
   if (needsOnboarding) return <Navigate to="/onboarding" replace />
   if (!needsHospital) return <Navigate to="/dashboard" replace />
@@ -56,7 +56,7 @@ function HospitalSetupRoute({ children }) {
 
 function AuthOnlyRoute({ children }) {
   const { isAuthenticated, needsOnboarding, needsHospital, needsRescueStation, authLoading } = useAuth()
-  if (authLoading) return null
+  if (authLoading) return <div className="py-10 text-center text-surface-500">Lade Sitzung...</div>
   if (!isAuthenticated) return <Navigate to="/login" replace />
   if (needsOnboarding) return <Navigate to="/onboarding" replace />
   if (needsHospital) return <Navigate to="/hospital-choice" replace />
@@ -66,7 +66,7 @@ function AuthOnlyRoute({ children }) {
 
 function RescueSetupRoute({ children }) {
   const { isAuthenticated, needsOnboarding, authLoading } = useAuth()
-  if (authLoading) return null
+  if (authLoading) return <div className="py-10 text-center text-surface-500">Lade Sitzung...</div>
   if (!isAuthenticated) return <Navigate to="/login" replace />
   if (needsOnboarding) return <Navigate to="/onboarding" replace />
   return children
@@ -74,7 +74,7 @@ function RescueSetupRoute({ children }) {
 
 function MedicalLicenseRoute({ children }) {
   const { isAuthenticated, needsOnboarding, authLoading, user } = useAuth()
-  if (authLoading) return null
+  if (authLoading) return <div className="py-10 text-center text-surface-500">Lade Sitzung...</div>
   if (!isAuthenticated) return <Navigate to="/login" replace />
   if (needsOnboarding) return <Navigate to="/onboarding" replace />
   if (!user?.medicalLicense) return <Navigate to="/rettungsdienst" replace />
@@ -83,7 +83,7 @@ function MedicalLicenseRoute({ children }) {
 
 function RescueLicenseRoute({ children }) {
   const { isAuthenticated, needsOnboarding, authLoading, user } = useAuth()
-  if (authLoading) return null
+  if (authLoading) return <div className="py-10 text-center text-surface-500">Lade Sitzung...</div>
   if (!isAuthenticated) return <Navigate to="/login" replace />
   if (needsOnboarding) return <Navigate to="/onboarding" replace />
   if (!user?.rescueCertified) return <Navigate to="/hospital" replace />
@@ -92,7 +92,7 @@ function RescueLicenseRoute({ children }) {
 
 function PublicRoute({ children }) {
   const { isAuthenticated, authLoading } = useAuth()
-  if (authLoading) return null
+  if (authLoading) return <div className="py-10 text-center text-surface-500">Lade Sitzung...</div>
   return isAuthenticated ? <Navigate to="/dashboard" replace /> : children
 }
 

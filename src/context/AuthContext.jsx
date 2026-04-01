@@ -261,25 +261,35 @@ export function AuthProvider({ children }) {
     if (sb) {
       ;(async () => {
         setAuthLoading(true)
-        const { data: { session } } = await sb.auth.getSession()
-        if (cancelled) return
-        if (session?.user) {
-          await migrateLocalProfileToSupabaseIfNeeded(session.user)
-          const mapped = await buildUserFromSession(session)
-          if (mapped) {
-            persist({ ...mapped, id: session.user.id, email: session.user.email || mapped.email })
+        try {
+          const { data: { session }, error: sessionError } = await sb.auth.getSession()
+          if (sessionError) throw sessionError
+          if (cancelled) return
+          if (session?.user) {
+            await migrateLocalProfileToSupabaseIfNeeded(session.user)
+            const mapped = await buildUserFromSession(session)
+            if (mapped) {
+              persist({ ...mapped, id: session.user.id, email: session.user.email || mapped.email })
+            }
+          } else {
+            setUser(null)
+            localStorage.removeItem('medisim_user')
           }
-        } else {
-          setUser(null)
-          localStorage.removeItem('medisim_user')
+        } catch (_error) {
+          if (!cancelled) {
+            setUser(null)
+            localStorage.removeItem('medisim_user')
+          }
+        } finally {
+          if (!cancelled) setAuthLoading(false)
         }
-        if (!cancelled) setAuthLoading(false)
       })()
       const { data: sub } = sb.auth.onAuthStateChange(async (event, session) => {
         if (cancelled) return
         if (event === 'SIGNED_OUT' || !session) {
           setUser(null)
           localStorage.removeItem('medisim_user')
+          setAuthLoading(false)
           return
         }
         if (session.user) {
