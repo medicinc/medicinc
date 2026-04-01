@@ -192,8 +192,8 @@ export default function Navbar() {
                 <Link to="/login" className="px-4 py-2 text-sm font-medium text-surface-700 hover:text-surface-900 transition-colors">
                   Anmelden
                 </Link>
-                <Link to="/login" className="btn-primary text-sm !py-2 !px-4">
-                  Admin-Login
+                <Link to="/register-gate" className="btn-primary text-sm !py-2 !px-4">
+                  Registrierung
                 </Link>
               </div>
             )}
