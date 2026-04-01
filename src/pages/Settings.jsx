@@ -6,14 +6,20 @@ import { requestSupabaseDsarDelete, requestSupabaseDsarExport } from '../service
 
 export default function Settings() {
   const { user, updateUser, deleteUserAccountData } = useAuth()
+  const readAiConsent = () => {
+    try {
+      const raw = String(localStorage.getItem('medisim_ai_consent') || '').trim().toLowerCase()
+      return raw === 'granted' || raw === 'true' || raw === '1' || raw === 'yes' || raw === 'on'
+    } catch {
+      return false
+    }
+  }
   const [textBlocks, setTextBlocks] = useState(Array.isArray(user?.documentTextBlocks) ? user.documentTextBlocks.join('\n') : '')
   const [saved, setSaved] = useState(false)
   const [tutorialResetInfo, setTutorialResetInfo] = useState('')
   const [privacyInfo, setPrivacyInfo] = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState('')
-  const [aiConsent, setAiConsent] = useState(() => {
-    try { return localStorage.getItem('medisim_ai_consent') === 'granted' } catch { return false }
-  })
+  const [aiConsent, setAiConsent] = useState(() => readAiConsent())
   const [reducedIntensity, setReducedIntensity] = useState(() => {
     try { return localStorage.getItem('medisim_content_intensity') === 'reduced' } catch { return false }
   })

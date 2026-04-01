@@ -12,12 +12,17 @@ function sanitizeText(value) {
   return String(value || '').replace(/\s+/g, ' ').trim()
 }
 
-export function isAiChatConfigured() {
+function hasAiConsent() {
   try {
-    return localStorage.getItem(STORAGE_CONSENT_KEY) === 'granted'
+    const raw = sanitizeText(localStorage.getItem(STORAGE_CONSENT_KEY) || '').toLowerCase()
+    return raw === 'granted' || raw === 'true' || raw === '1' || raw === 'yes' || raw === 'on'
   } catch {
     return false
   }
+}
+
+export function isAiChatConfigured() {
+  return hasAiConsent()
 }
 
 async function safeReadJson(response) {

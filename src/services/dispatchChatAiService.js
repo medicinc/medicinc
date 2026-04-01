@@ -11,6 +11,15 @@ function sanitize(text) {
   return String(text || '').replace(/\s+/g, ' ').trim()
 }
 
+function hasAiConsent() {
+  try {
+    const raw = sanitize(localStorage.getItem(STORAGE_CONSENT_KEY) || '').toLowerCase()
+    return raw === 'granted' || raw === 'true' || raw === '1' || raw === 'yes' || raw === 'on'
+  } catch {
+    return false
+  }
+}
+
 async function getSupabaseAuthHeaders() {
   const sb = getSupabaseClient()
   const anonKey = sanitize(import.meta.env.VITE_SUPABASE_ANON_KEY || '')
@@ -24,9 +33,7 @@ async function getSupabaseAuthHeaders() {
 }
 
 export async function requestDispatchReply({ eventTitle, eventContext = null, userMessage, history = [], signal }) {
-  const aiConsentGranted = (() => {
-    try { return localStorage.getItem(STORAGE_CONSENT_KEY) === 'granted' } catch { return false }
-  })()
+  const aiConsentGranted = hasAiConsent()
   if (!aiConsentGranted) return { ok: false, message: 'AI-Dialog ist deaktiviert oder Einwilligung fehlt.' }
   const supabaseUrl = sanitize(import.meta.env.VITE_SUPABASE_URL || '')
   if (!supabaseUrl) return { ok: false, message: 'VITE_SUPABASE_URL fehlt.' }
