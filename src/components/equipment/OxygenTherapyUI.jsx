@@ -30,9 +30,14 @@ export default function OxygenTherapyUI({ patient, onAction, savedState, onSaveS
   )
   const hydratingFromRemoteRef = useRef(false)
   const dirtyRef = useRef(false)
+  const lastLocalInteractionMsRef = useRef(0)
 
   useEffect(() => {
     if (!savedState || typeof savedState !== 'object') return
+    const remoteUpdatedMs = Date.parse(savedState?.updatedAt || '')
+    if (Number.isFinite(remoteUpdatedMs) && remoteUpdatedMs < lastLocalInteractionMsRef.current) {
+      return
+    }
     hydratingFromRemoteRef.current = true
     setPowered(!!savedState.powered)
     setRunning(!!savedState.running)
@@ -58,6 +63,7 @@ export default function OxygenTherapyUI({ patient, onAction, savedState, onSaveS
 
   const markDirty = () => {
     dirtyRef.current = true
+    lastLocalInteractionMsRef.current = Date.now()
   }
 
   const setField = (field, next, min, max) => {
