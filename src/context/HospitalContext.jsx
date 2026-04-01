@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { useAuth } from './AuthContext'
 import { generatePatient, generatePatientByDiagnosis, TRIAGE_LEVELS } from '../data/patientGenerator'
 import { WORKER_TYPES } from '../data/workerTypes'
@@ -600,6 +600,21 @@ export function HospitalProvider({ children }) {
   const lastSyncedSignatureRef = useRef('')
   const suppressNextCloudSyncRef = useRef(false)
   const cloudSyncTimerRef = useRef(null)
+  const isHospitalSyncLeader = useMemo(() => {
+    if (!hospital?.id) return false
+    // In local-only mode, keep single-device behavior unchanged.
+    if (!getSupabaseClient()) return true
+    const currentUserId = String(user?.id || '')
+    if (!currentUserId) return false
+    const ownerId = String(hospital?.ownerId || '')
+    if (ownerId && ownerId !== 'state') return ownerId === currentUserId
+    // Shared/public hospital: deterministically pick first member as simulation leader.
+    const memberIds = (hospital?.members || [])
+      .map((m) => String(m?.userId || ''))
+      .filter((id) => id && id !== 'state')
+      .sort()
+    return memberIds[0] === currentUserId
+  }, [hospital?.id, hospital?.ownerId, hospital?.members, user?.id])
   const withDebtSpendPopup = useCallback((prev, updated, spendLabel = 'Einkauf') => {
     if (Number(prev?.balance || 0) >= 0) return updated
     return {
@@ -928,15 +943,15 @@ export function HospitalProvider({ children }) {
 
   useEffect(() => {
     if (nextPatientRef.current) { clearTimeout(nextPatientRef.current); nextPatientRef.current = null }
-    if (!hospital?.id || !canReceive || hospital.isClosed) return
+    if (!hospital?.id || !canReceive || hospital.isClosed || !isHospitalSyncLeader) return
     scheduleNextPatient()
     return () => { if (nextPatientRef.current) { clearTimeout(nextPatientRef.current); nextPatientRef.current = null } }
-  }, [hospital?.id, canReceive, hospital?.isClosed, scheduleNextPatient])
+  }, [hospital?.id, canReceive, hospital?.isClosed, scheduleNextPatient, isHospitalSyncLeader])
 
   // Mass casualty event check — very rare, ~0.8% chance per 2 min cycle
   useEffect(() => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
-    if (!hospital?.id || !canReceive || hospital.isClosed) return
+    if (!hospital?.id || !canReceive || hospital.isClosed || !isHospitalSyncLeader) return
 
     timerRef.current = setInterval(() => {
 
@@ -993,7 +1008,7 @@ export function HospitalProvider({ children }) {
     }, 120000)
 
     return () => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null } }
-  }, [hospital?.id, canReceive, hospital?.isClosed])
+  }, [hospital?.id, canReceive, hospital?.isClosed, isHospitalSyncLeader])
 
   const setDoctorOnDuty = useCallback((stationId = 'er', enabled = true) => {
     if (!user?.id) return { success: false, message: 'Nicht eingeloggt.' }
@@ -1115,7 +1130,7 @@ export function HospitalProvider({ children }) {
   // Closure fine timer
   useEffect(() => {
     if (fineTimerRef.current) { clearInterval(fineTimerRef.current); fineTimerRef.current = null }
-    if (!hospital?.id || !hospital.isClosed) return
+    if (!hospital?.id || !hospital.isClosed || !isHospitalSyncLeader) return
 
     const patientLoad = hospital.patients?.length || 0
     const treatmentCapacity = (hospital.treatmentRooms?.length || 0) + (hospital.rooms?.filter(r => ['er', 'ward', 'icu'].includes(r.id)).length || 0) * 3
@@ -1142,10 +1157,10 @@ export function HospitalProvider({ children }) {
     }
 
     return () => { if (fineTimerRef.current) { clearInterval(fineTimerRef.current); fineTimerRef.current = null } }
-  }, [hospital?.id, hospital?.isClosed, hospital?.patients?.length])
+  }, [hospital?.id, hospital?.isClosed, hospital?.patients?.length, isHospitalSyncLeader])
 
   useEffect(() => {
-    if (!hospital?.id) return
+    if (!hospital?.id || !isHospitalSyncLeader) return
     let ownerCredit = 0
     let shouldCreditOwner = false
     setHospital(prev => {
@@ -1266,12 +1281,12 @@ export function HospitalProvider({ children }) {
       return prev
     })
     if (shouldCreditOwner && ownerCredit > 0) addMoney(ownerCredit)
-  }, [hospital?.id, hospital?.balance, user?.id, addMoney, triggerPolicePenalty])
+  }, [hospital?.id, hospital?.balance, user?.id, addMoney, triggerPolicePenalty, isHospitalSyncLeader])
 
   // Auto-triage by worker (slower)
   useEffect(() => {
     if (autoTriageRef.current) { clearInterval(autoTriageRef.current); autoTriageRef.current = null }
-    if (!hospital?.id) return
+    if (!hospital?.id || !isHospitalSyncLeader) return
     const hasTriageWorker = hospital.workers?.some(w => w.typeId === 'triagekraft')
     if (!hasTriageWorker) return
 
@@ -1315,12 +1330,12 @@ export function HospitalProvider({ children }) {
     }, 15000)
 
     return () => { if (autoTriageRef.current) { clearInterval(autoTriageRef.current); autoTriageRef.current = null } }
-  }, [hospital?.id, hospital?.workers?.length])
+  }, [hospital?.id, hospital?.workers?.length, isHospitalSyncLeader])
 
   // Clinical progression engine: updates all active patients continuously.
   useEffect(() => {
     if (clinicalTickRef.current) { clearInterval(clinicalTickRef.current); clinicalTickRef.current = null }
-    if (!hospital?.id) return
+    if (!hospital?.id || !isHospitalSyncLeader) return
 
     clinicalTickRef.current = setInterval(() => {
       setHospital(prev => {
@@ -1779,13 +1794,13 @@ export function HospitalProvider({ children }) {
     }, 60000)
 
     return () => { if (clinicalTickRef.current) { clearInterval(clinicalTickRef.current); clinicalTickRef.current = null } }
-  }, [hospital?.id])
+  }, [hospital?.id, isHospitalSyncLeader])
 
   // Background infusion/transfusion engine:
   // keeps material cart infusions running even when UI is closed and applies continuous hemodynamic effects.
   useEffect(() => {
     if (infusionTickRef.current) { clearInterval(infusionTickRef.current); infusionTickRef.current = null }
-    if (!hospital?.id) return
+    if (!hospital?.id || !isHospitalSyncLeader) return
     infusionTickRef.current = setInterval(() => {
       setHospital(prev => {
         if (!prev) return prev
@@ -2071,7 +2086,7 @@ export function HospitalProvider({ children }) {
         infusionTickRef.current = null
       }
     }
-  }, [hospital?.id])
+  }, [hospital?.id, isHospitalSyncLeader])
 
   const hasPermission = useCallback((perm) => {
     if (!hospital || !user) return false
