@@ -15,40 +15,27 @@ function getFunctionUrl(name) {
   return `${base.replace(/\/+$/, '')}/functions/v1/${name}`
 }
 
-function anonHeaders() {
-  const anon = String(import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim()
-  if (!anon) return { 'Content-Type': 'application/json' }
-  return {
-    'Content-Type': 'application/json',
-    apikey: anon,
-    Authorization: `Bearer ${anon}`,
-  }
-}
-
-async function readFunctionsHttpErrorBody(error) {
-  try {
-    const ctx = error?.context
-    if (ctx && typeof ctx.json === 'function') {
-      return await ctx.json()
-    }
-  } catch (_e) {
-    /* ignore */
-  }
-  return null
-}
-
-/** JWT payload `exp` (seconds) → ISO string, nur für Diagnose */
-function accessTokenExpiryIso(token) {
+function decodeJwtPayload(token) {
   try {
     const p = String(token || '').split('.')[1]
     if (!p) return null
     const b = p.replace(/-/g, '+').replace(/_/g, '/')
     const pad = b.length % 4 === 0 ? '' : '='.repeat(4 - (b.length % 4))
-    const json = JSON.parse(atob(b + pad))
-    return json?.exp ? new Date(json.exp * 1000).toISOString() : null
+    return JSON.parse(atob(b + pad))
   } catch (_e) {
     return null
   }
+}
+
+/** JWT payload `exp` (seconds) → ISO string, nur für Diagnose */
+function accessTokenExpiryIso(token) {
+  const json = decodeJwtPayload(token)
+  return json?.exp ? new Date(json.exp * 1000).toISOString() : null
+}
+
+function accessTokenIss(token) {
+  const json = decodeJwtPayload(token)
+  return typeof json?.iss === 'string' ? json.iss : null
 }
 
 /**
@@ -59,9 +46,17 @@ async function getRefreshedAccessToken(sb) {
   const session = refreshData?.session || (await sb.auth.getSession()).data?.session
   const token = String(session?.access_token || '')
   if (!token || token.split('.').length !== 3) {
-    return { token: null, error: refreshErr?.message || 'Kein Access-Token.' }
+    return { token: null, error: refreshErr?.message || 'Kein Access-Token.', refreshed: false }
   }
-  return { token, error: null }
+  return { token, error: null, refreshed: Boolean(refreshData?.session) }
+}
+
+function expectedJwtIssuer() {
+  const base = String(import.meta.env.VITE_SUPABASE_URL || '')
+    .trim()
+    .replace(/\/+$/, '')
+  if (!base.startsWith('http')) return null
+  return `${base}/auth/v1`
 }
 
 /** Laufzeit-Snapshot für das Feedback-Formular (Debug / Support). */
@@ -82,6 +77,9 @@ export async function collectFeedbackDiagnostics(appUser) {
     hasJwt = Boolean(sessionToken && sessionToken.split('.').length === 3 && sessionToken !== anon)
   }
   const aid = appUser?.id != null ? String(appUser.id) : ''
+  const iss = sessionToken ? accessTokenIss(sessionToken) : null
+  const expIso = sessionToken ? accessTokenExpiryIso(sessionToken) : null
+  const expectedIss = expectedJwtIssuer()
   return {
     envSupabaseUrlSet: urlSet,
     envAnonKeySet: anonSet,
@@ -94,7 +92,11 @@ export async function collectFeedbackDiagnostics(appUser) {
     hasUserAccessToken: hasJwt,
     sessionError,
     feedbackSubmitUrl: getFunctionUrl('feedback-submit') || null,
-    accessTokenExpiresAt: sessionToken ? accessTokenExpiryIso(sessionToken) : null,
+    accessTokenExpiresAt: expIso,
+    accessTokenIssuer: iss,
+    expectedJwtIssuer: expectedIss,
+    issuerMatchesEnv:
+      iss && expectedIss ? iss === expectedIss : iss || expectedIss ? false : null,
   }
 }
 
@@ -130,8 +132,21 @@ export async function submitFeedback({ title, body, category, attachmentPaths = 
   if (!sb) {
     return { ok: false, message: 'Supabase nicht konfiguriert.', details: { reason: 'no_client' } }
   }
+  const url = getFunctionUrl('feedback-submit')
+  if (!url) {
+    return { ok: false, message: 'Supabase-URL fehlt.', details: { reason: 'no_function_url' } }
+  }
   const anon = String(import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim()
-  const { token, error: tokenErr } = await getRefreshedAccessToken(sb)
+  if (!anon) {
+    return { ok: false, message: 'VITE_SUPABASE_ANON_KEY fehlt.', details: { reason: 'no_anon' } }
+  }
+
+  const { error: userErr } = await sb.auth.getUser()
+  if (userErr) {
+    await sb.auth.refreshSession().catch(() => {})
+  }
+
+  const { token, error: tokenErr, refreshed } = await getRefreshedAccessToken(sb)
   if (!token) {
     return {
       ok: false,
@@ -139,69 +154,55 @@ export async function submitFeedback({ title, body, category, attachmentPaths = 
       details: { reason: 'no_access_token', tokenErr },
     }
   }
+
   const payload = {
     title: String(title || '').trim(),
     body: String(body || '').trim(),
     category: String(category || 'feedback').trim(),
     attachmentPaths,
   }
-  const { data, error } = await sb.functions.invoke('feedback-submit', {
-    body: payload,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      ...(anon ? { apikey: anon } : {}),
-    },
-  })
-  if (error) {
-    const errJson = await readFunctionsHttpErrorBody(error)
-    const status = error?.context?.status
-    const fromBody = typeof errJson?.message === 'string' ? errJson.message : null
-    if (fromBody) {
-      return {
-        ok: false,
-        message: fromBody,
-        details: { phase: 'invoke_http_error', status, body: errJson, invokeMessage: error.message },
-      }
-    }
-    const fallback = await fetch(getFunctionUrl('feedback-submit'), {
-      method: 'POST',
-      headers: await buildAuthHeaders(),
-      body: JSON.stringify(payload),
-    }).catch(() => null)
-    if (!fallback) {
-      return {
-        ok: false,
-        message: error.message || 'Senden fehlgeschlagen.',
-        details: { phase: 'invoke_error_no_fallback', status, invokeMessage: error.message },
-      }
-    }
-    const j = await fallback.json().catch(() => null)
-    if (!fallback.ok) {
-      return {
-        ok: false,
-        message: j?.message || `Senden fehlgeschlagen (HTTP ${fallback.status}).`,
-        details: { phase: 'fetch_fallback', status: fallback.status, body: j },
-      }
-    }
-    return { ok: true, message: j?.message || 'Gesendet.', details: { phase: 'fetch_fallback_ok', body: j } }
-  }
-  if (data?.message && !data?.ok) {
-    return { ok: false, message: data.message, details: { phase: 'invoke_2xx_error_shape', data } }
-  }
-  return { ok: true, message: data?.message || 'Gesendet.', details: { phase: 'invoke_ok', data } }
-}
 
-async function buildAuthHeaders() {
-  const sb = getSupabaseClient()
-  const anon = String(import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim()
-  if (!sb || !anon) return { 'Content-Type': 'application/json', ...anonHeaders() }
-  const { token } = await getRefreshedAccessToken(sb)
-  if (!token) {
-    return { 'Content-Type': 'application/json', ...anonHeaders() }
+  /** Direkter fetch (ohne functions.invoke): vermeidet Header-Kollisionen mit dem Functions-Client. */
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: anon,
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  }).catch((e) => null)
+
+  if (!res) {
+    return {
+      ok: false,
+      message: 'Netzwerkfehler beim Senden.',
+      details: { phase: 'fetch_network', sessionRefreshed: refreshed },
+    }
+  }
+
+  const j = await res.json().catch(() => null)
+  if (!res.ok) {
+    const msg = typeof j?.message === 'string' ? j.message : `HTTP ${res.status}`
+    return {
+      ok: false,
+      message: msg,
+      details: {
+        phase: 'fetch',
+        status: res.status,
+        body: j,
+        sessionRefreshed: refreshed,
+        tokenIssuer: accessTokenIss(token),
+        expectedIssuer: expectedJwtIssuer(),
+      },
+    }
+  }
+  if (j?.message && !j?.ok) {
+    return { ok: false, message: j.message, details: { phase: 'fetch_body_error', data: j } }
   }
   return {
-    'Content-Type': 'application/json',
-    apikey: anon,
-    Authorization: `Bearer ${token}`,
+    ok: true,
+    message: j?.message || 'Gesendet.',
+    details: { phase: 'fetch_ok', data: j, sessionRefreshed: refreshed },
   }
 }
