@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import Seo from '../components/Seo'
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react'
 import { confirmWaitlistEntry } from '../services/waitlistService'
 
@@ -34,6 +35,11 @@ export default function WaitlistConfirm() {
 
   return (
     <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <Seo
+        title="Alpha-Warteliste – E-Mail bestätigen | Medic Inc"
+        description="Bestätigung der E-Mail für die Medic-Inc-Alpha-Warteliste."
+        noindex
+      />
       <div className="card p-7 text-center space-y-3">
         {status === 'loading' && <Loader2 className="w-8 h-8 mx-auto animate-spin text-primary-600" />}
         {status === 'success' && <CheckCircle2 className="w-8 h-8 mx-auto text-emerald-600" />}

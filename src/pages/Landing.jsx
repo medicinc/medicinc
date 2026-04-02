@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import Seo from '../components/Seo'
 import { submitWaitlistEntry } from '../services/waitlistService'
 import {
   Activity, Stethoscope, Brain, Heart, Building2, Users,
@@ -65,23 +66,6 @@ const LANDING_META_DESC =
   'Medic Inc: Medizinische Simulation mit KI-gestütztem Patienten- und Team-Chat, Krankenhaus-Management und Rettungsdienst. Alpha-Warteliste, realistische Fälle, Multiplayer. Kein Echtbetrieb – Lern- und Trainingssimulation.'
 
 export default function Landing() {
-  useEffect(() => {
-    const prevTitle = document.title
-    document.title = 'Medic Inc – Medizinische Simulation mit KI-Chat & Multiplayer | Alpha'
-    let meta = document.querySelector('meta[name="description"]')
-    if (!meta) {
-      meta = document.createElement('meta')
-      meta.setAttribute('name', 'description')
-      document.head.appendChild(meta)
-    }
-    const prevDesc = meta.getAttribute('content') || ''
-    meta.setAttribute('content', LANDING_META_DESC)
-    return () => {
-      document.title = prevTitle
-      meta.setAttribute('content', prevDesc)
-    }
-  }, [])
-
   const [waitlistOpen, setWaitlistOpen] = useState(false)
   const [waitlistDone, setWaitlistDone] = useState(false)
   const [waitlistForm, setWaitlistForm] = useState({
@@ -161,6 +145,10 @@ export default function Landing() {
 
   return (
     <div className="overflow-hidden">
+      <Seo
+        title="Medic Inc – Medizinische Simulation mit KI-Chat & Multiplayer | Alpha"
+        description={LANDING_META_DESC}
+      />
       <section className="relative min-h-[78vh] sm:min-h-[92vh] flex items-center">
         <div className="absolute inset-0 bg-gradient-to-br from-primary-50 via-white to-accent-50" />
         <div className="absolute top-20 left-10 w-72 h-72 bg-primary-200/30 rounded-full blur-3xl" />

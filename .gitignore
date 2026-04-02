@@ -3,6 +3,8 @@ imaging-source/
 *.dcm
 node_modules/
 dist/
+playwright-report/
+test-results/
 supabase/.temp/
 .env
 .env.local

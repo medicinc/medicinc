@@ -1,6 +1,12 @@
+import Seo from '../../components/Seo'
+
 export default function Nutzungsbedingungen() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <Seo
+        title="Nutzungsbedingungen | Medic Inc"
+        description="Nutzungsbedingungen der Medic-Inc-Simulationsplattform (Alpha, Lern- und Trainingsbetrieb)."
+      />
       <div className="card p-6 sm:p-8 space-y-4 text-sm text-surface-700">
         <h1 className="font-display text-3xl font-bold text-surface-900">Nutzungsbedingungen</h1>
         <p>Stand: 01.04.2026</p>

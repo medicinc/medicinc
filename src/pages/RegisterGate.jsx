@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import Seo from '../components/Seo'
 import { Activity, KeyRound, ArrowRight } from 'lucide-react'
 import { requestAlphaRegistrationGate, setAlphaRegistrationToken } from '../services/alphaRegistrationService'
 
@@ -30,6 +31,10 @@ export default function RegisterGate() {
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-8">
+      <Seo
+        title="Alpha-Registrierung | Medic Inc"
+        description="Einladungscode eingeben und Konto für die Medic-Inc-Alpha-Phase erstellen."
+      />
       <div className="w-full max-w-md card p-8">
         <div className="flex items-center gap-2.5 mb-6">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center">

@@ -1,6 +1,12 @@
+import Seo from '../../components/Seo'
+
 export default function Impressum() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <Seo
+        title="Impressum | Medic Inc"
+        description="Impressum und Anbieterkennzeichnung für Medic Inc (medizinische Lernsimulation)."
+      />
       <div className="card p-6 sm:p-8 space-y-4">
         <h1 className="font-display text-3xl font-bold text-surface-900">Impressum</h1>
         <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">

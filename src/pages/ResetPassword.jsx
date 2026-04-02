@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import Seo from '../components/Seo'
 import { Activity, Lock, Eye, EyeOff, ArrowRight, CheckCircle2 } from 'lucide-react'
 import { getSupabaseClient } from '../lib/supabaseClient'
 
@@ -75,6 +76,7 @@ export default function ResetPassword() {
   if (!sb) {
     return (
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-8">
+        <Seo title="Passwort zurücksetzen | Medic Inc" description="Neues Passwort für Medic Inc setzen." noindex />
         <div className="w-full max-w-md card p-8 text-center">
           <p className="text-surface-600 text-sm mb-4">Supabase ist nicht konfiguriert. Passwort-Reset steht nicht zur Verfügung.</p>
           <Link to="/login" className="btn-primary inline-flex">Zum Login</Link>
@@ -86,6 +88,7 @@ export default function ResetPassword() {
   if (phase === 'loading') {
     return (
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-8">
+        <Seo title="Passwort-Link wird geprüft | Medic Inc" noindex />
         <div className="w-full max-w-md card p-8 text-center space-y-3">
           <div className="w-10 h-10 mx-auto border-2 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
           <h1 className="font-display text-xl font-bold text-surface-900">Link wird geprüft…</h1>
@@ -98,6 +101,7 @@ export default function ResetPassword() {
   if (phase === 'invalid') {
     return (
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-8">
+        <Seo title="Passwort-Link ungültig | Medic Inc" noindex />
         <div className="w-full max-w-md card p-8 text-center space-y-3">
           <Activity className="w-10 h-10 mx-auto text-amber-600" />
           <h1 className="font-display text-xl font-bold text-surface-900">Link ungültig oder abgelaufen</h1>
@@ -113,6 +117,7 @@ export default function ResetPassword() {
   if (phase === 'done') {
     return (
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-8">
+        <Seo title="Passwort geändert | Medic Inc" noindex />
         <div className="w-full max-w-md card p-8 text-center space-y-3">
           <CheckCircle2 className="w-12 h-12 mx-auto text-emerald-600" />
           <h1 className="font-display text-xl font-bold text-surface-900">Passwort aktualisiert</h1>
@@ -124,6 +129,7 @@ export default function ResetPassword() {
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-8">
+      <Seo title="Neues Passwort setzen | Medic Inc" description="Neues Passwort für dein Medic-Inc-Konto wählen." noindex />
       <div className="w-full max-w-md card p-8">
         <div className="flex items-center gap-2.5 mb-6">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center">

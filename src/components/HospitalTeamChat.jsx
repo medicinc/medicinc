@@ -14,10 +14,16 @@ export default function HospitalTeamChat({ hospitalId }) {
   const [text, setText] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const bottomRef = useRef(null)
+  const messagesScrollRef = useRef(null)
 
-  const scrollDown = useCallback(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  const scrollDown = useCallback((smooth = false) => {
+    const el = messagesScrollRef.current
+    if (!el) return
+    if (smooth) {
+      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
+    } else {
+      el.scrollTop = el.scrollHeight
+    }
   }, [])
 
   useEffect(() => {
@@ -37,7 +43,7 @@ export default function HospitalTeamChat({ hospitalId }) {
       } finally {
         if (!cancelled) {
           setLoading(false)
-          setTimeout(scrollDown, 50)
+          setTimeout(() => scrollDown(false), 50)
         }
       }
     })()
@@ -47,7 +53,7 @@ export default function HospitalTeamChat({ hospitalId }) {
         if (prev.some((m) => m.id === row.id)) return prev
         return [...prev, row]
       })
-      setTimeout(scrollDown, 30)
+      setTimeout(() => scrollDown(true), 30)
     })
     return () => {
       cancelled = true
@@ -83,7 +89,7 @@ export default function HospitalTeamChat({ hospitalId }) {
       {error && (
         <p className="text-sm text-red-600 mb-2">{error}</p>
       )}
-      <div className="flex-1 overflow-y-auto space-y-2 pr-1 mb-3 text-sm">
+      <div ref={messagesScrollRef} className="flex-1 overflow-y-auto space-y-2 pr-1 mb-3 text-sm">
         {loading && <p className="text-surface-500">Lade Nachrichten…</p>}
         {!loading && messages.length === 0 && (
           <p className="text-surface-500">Noch keine Nachrichten. Schreib die erste Zeile an dein Team.</p>
@@ -102,7 +108,6 @@ export default function HospitalTeamChat({ hospitalId }) {
             </div>
           )
         })}
-        <div ref={bottomRef} />
       </div>
       <form onSubmit={send} className="flex gap-2">
         <input

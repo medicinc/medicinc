@@ -29,6 +29,7 @@ import Jugendschutz from './pages/legal/Jugendschutz'
 import CommunityRegeln from './pages/legal/CommunityRegeln'
 import WaitlistConfirm from './pages/WaitlistConfirm'
 import ResetPassword from './pages/ResetPassword'
+import NotFound from './pages/NotFound'
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, needsOnboarding, needsHospital, needsRescueStation, authLoading } = useAuth()
@@ -132,7 +133,7 @@ export default function App() {
         <Route path="/ai-hinweise" element={<AiHinweise />} />
         <Route path="/jugendschutz" element={<Jugendschutz />} />
         <Route path="/community-regeln" element={<CommunityRegeln />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   )

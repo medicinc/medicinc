@@ -185,7 +185,7 @@ export default function PatientChat({ patient, onComplete, mode = 'triage', init
   const [chatNotice, setChatNotice] = useState(null)
   const [painStimulusContext, setPainStimulusContext] = useState(null)
   const [painStimulusDialogue, setPainStimulusDialogue] = useState({ explained: false })
-  const chatEndRef = useRef(null)
+  const messagesScrollRef = useRef(null)
 
   const avatar = GENDER_AVATARS[patient.gender] || GENDER_AVATARS.männlich
   const isForeignConversation = conversationLang !== 'de'
@@ -376,7 +376,9 @@ export default function PatientChat({ patient, onComplete, mode = 'triage', init
   }, [injectedPatientMessage?.id, injectedPatientMessage?.text])
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const el = messagesScrollRef.current
+    if (!el) return
+    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
   }, [messages, isTyping])
 
   const askFreeQuestion = async () => {
@@ -621,7 +623,7 @@ export default function PatientChat({ patient, onComplete, mode = 'triage', init
       </div>
 
       {/* Chat messages — scrollable area fills remaining space */}
-      <div className="flex-1 overflow-y-auto px-6 py-5 space-y-1 bg-gradient-to-b from-surface-50/80 to-white min-h-0" style={{ flexBasis: 0 }}>
+      <div ref={messagesScrollRef} className="flex-1 overflow-y-auto px-6 py-5 space-y-1 bg-gradient-to-b from-surface-50/80 to-white min-h-0" style={{ flexBasis: 0 }}>
         {messages.map(msg => (
           <div key={msg.id} className={`flex ${msg.type === 'doctor' ? 'justify-end' : 'justify-start'} mb-4`}>
             {msg.type === 'patient' && (
@@ -659,7 +661,6 @@ export default function PatientChat({ patient, onComplete, mode = 'triage', init
           </div>
         ))}
         {isTyping && <TypingIndicator avatar={avatar} />}
-        <div ref={chatEndRef} />
       </div>
 
       {/* Chat input */}

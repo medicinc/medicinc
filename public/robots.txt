@@ -1,2 +1,4 @@
 User-agent: *
 Allow: /
+
+# Hinweis: Bei `npm run build` werden dist/robots.txt und dist/sitemap.xml mit Sitemap-Zeile erzeugt (VITE_SITE_URL).

@@ -1,6 +1,12 @@
+import Seo from '../../components/Seo'
+
 export default function CommunityRegeln() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <Seo
+        title="Community-Regeln | Medic Inc"
+        description="Community- und Verhaltensregeln für Medic Inc (Profile, Krankenhausnamen, Meldungen)."
+      />
       <div className="card p-6 sm:p-8 space-y-3">
         <h1 className="font-display text-3xl font-bold text-surface-900">Community-Regeln</h1>
         <p className="text-sm text-surface-700">Keine Beleidigungen, Hassrede, diskriminierenden oder rechtswidrigen Inhalte in Profilen, Krankenhausnamen oder Beschreibungen.</p>

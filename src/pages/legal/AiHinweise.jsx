@@ -1,6 +1,12 @@
+import Seo from '../../components/Seo'
+
 export default function AiHinweise() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <Seo
+        title="AI-Hinweise | Medic Inc"
+        description="Hinweise zu KI-gestützten Dialogen in Medic Inc – Simulation, keine medizinische Beratung."
+      />
       <div className="card p-6 sm:p-8 space-y-4 text-sm text-surface-700">
         <h1 className="font-display text-3xl font-bold text-surface-900">AI-Hinweise</h1>
         <p>

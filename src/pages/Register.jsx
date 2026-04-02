@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import Seo from '../components/Seo'
 import { Activity, ArrowRight, Mail, Lock, User } from 'lucide-react'
 import { getSupabaseClient } from '../lib/supabaseClient'
 import { useAuth } from '../context/AuthContext'
@@ -54,6 +55,7 @@ export default function Register() {
   if (!sb) {
     return (
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-8">
+        <Seo title="Registrierung | Medic Inc" description="Konto für Medic Inc erstellen – medizinische Simulation mit Supabase-Auth." />
         <div className="w-full max-w-xl card p-8 border-amber-200 bg-amber-50/70">
           <div className="flex items-center gap-2.5 mb-6">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center">
@@ -75,6 +77,7 @@ export default function Register() {
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-8">
+      <Seo title="Registrierung | Medic Inc" description="Konto für Medic Inc erstellen – medizinische Simulation mit Supabase-Auth." />
       <div className="w-full max-w-md card p-8">
         <div className="flex items-center gap-2.5 mb-6">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center">

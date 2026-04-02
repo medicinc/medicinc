@@ -76,7 +76,7 @@ export default function Navbar() {
           </Link>
 
           {navLinks.length > 0 && (
-            <div className="hidden md:flex items-center gap-1">
+            <div className="hidden lg:flex items-center gap-1">
               {navLinks.map(({ to, label, icon: Icon }) => (
                 <Link
                   key={to}
@@ -201,7 +201,7 @@ export default function Navbar() {
             {navLinks.length > 0 && (
               <button
                 onClick={() => setMobileOpen(!mobileOpen)}
-                className="md:hidden p-2 rounded-lg hover:bg-surface-50 transition-colors"
+                className="lg:hidden p-2 rounded-lg hover:bg-surface-50 transition-colors"
               >
                 {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
@@ -211,7 +211,7 @@ export default function Navbar() {
       </div>
 
       {mobileOpen && navLinks.length > 0 && (
-        <div className="md:hidden border-t border-surface-200 bg-white">
+        <div className="lg:hidden border-t border-surface-200 bg-white">
           <div className="px-4 py-3 space-y-1">
             {navLinks.map(({ to, label, icon: Icon }) => (
               <Link

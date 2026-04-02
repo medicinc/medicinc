@@ -1,6 +1,12 @@
+import Seo from '../../components/Seo'
+
 export default function Datenschutz() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <Seo
+        title="Datenschutz | Medic Inc"
+        description="Datenschutzerklärung für Medic Inc – Verarbeitung von Account-, Spiel- und Wartelisten-Daten."
+      />
       <div className="card p-6 sm:p-8 space-y-5 text-sm text-surface-700">
         <h1 className="font-display text-3xl font-bold text-surface-900">Datenschutzerklärung</h1>
         <p>Stand: 01.04.2026</p>

@@ -2,11 +2,11 @@ import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import {
   Save, Settings as SettingsIcon, Check, RotateCcw, Shield, Download, Trash2,
-  MessageSquarePlus, Paperclip, Loader2, Bug,
+  MessageSquarePlus, Paperclip, Loader2, AlertCircle,
 } from 'lucide-react'
 import { exportUserDataBundle } from '../services/profileService'
 import { requestSupabaseDsarDelete, requestSupabaseDsarExport } from '../services/dsarService'
-import { uploadFeedbackFiles, submitFeedback, collectFeedbackDiagnostics } from '../services/feedbackService'
+import { uploadFeedbackFiles, submitFeedback } from '../services/feedbackService'
 import { getSupabaseClient, isUuid } from '../lib/supabaseClient'
 
 const FEEDBACK_MIN_TITLE = 2
@@ -28,29 +28,9 @@ export default function Settings() {
   const [feedbackFiles, setFeedbackFiles] = useState(null)
   const [fileInputKey, setFileInputKey] = useState(0)
   const [feedbackSending, setFeedbackSending] = useState(false)
-  const [feedbackBanner, setFeedbackBanner] = useState('')
-  const [feedbackDiag, setFeedbackDiag] = useState(null)
-  const [feedbackDiagLoading, setFeedbackDiagLoading] = useState(false)
-  const [feedbackLog, setFeedbackLog] = useState([])
+  const [feedbackNotice, setFeedbackNotice] = useState({ variant: null, text: '' })
 
   const feedbackAvailable = Boolean(user && isUuid(user.id) && getSupabaseClient())
-
-  const appendFeedbackLog = (title, detail) => {
-    const time = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-    const body = detail === undefined ? '' : typeof detail === 'string' ? detail : JSON.stringify(detail, null, 2)
-    setFeedbackLog((prev) => [...prev.slice(-35), `${time} — ${title}${body ? `\n${body}` : ''}`])
-  }
-
-  const refreshFeedbackDiag = async () => {
-    setFeedbackDiagLoading(true)
-    try {
-      const d = await collectFeedbackDiagnostics(user)
-      setFeedbackDiag(d)
-      appendFeedbackLog('Diagnose geladen', d)
-    } finally {
-      setFeedbackDiagLoading(false)
-    }
-  }
 
   const saveSettings = async () => {
     const nextBlocks = String(textBlocks || '')
@@ -110,49 +90,44 @@ export default function Settings() {
   }
 
   const sendFeedback = async () => {
-    setFeedbackBanner('')
-    appendFeedbackLog('Absenden geklickt', {
-      feedbackAvailable,
-      userId: user?.id ?? null,
-      titleLen: feedbackTitle.trim().length,
-      bodyLen: feedbackBody.trim().length,
-      fileCount: feedbackFiles?.length ?? 0,
-    })
+    setFeedbackNotice({ variant: null, text: '' })
 
     if (!feedbackAvailable) {
-      const d = await collectFeedbackDiagnostics(user)
-      appendFeedbackLog('Abgebrochen: Anforderungen nicht erfüllt', d)
-      setFeedbackBanner(
-        'Hierfür brauchst du ein registriertes Konto per E-Mail (Supabase): App-User-ID muss eine UUID sein und Supabase muss erreichbar sein. Öffne „Feedback-Diagnose“ unten für Details.',
-      )
-      setTimeout(() => setFeedbackBanner(''), 12000)
+      setFeedbackNotice({
+        variant: 'error',
+        text:
+          'Hierfür brauchst du ein registriertes Konto per E-Mail (Supabase): App-User-ID muss eine UUID sein und Supabase muss erreichbar sein.',
+      })
+      setTimeout(() => setFeedbackNotice({ variant: null, text: '' }), 12000)
       return
     }
 
     const titleT = feedbackTitle.trim()
     const bodyT = feedbackBody.trim()
     if (titleT.length < FEEDBACK_MIN_TITLE) {
-      appendFeedbackLog('Validierung fehlgeschlagen', { feld: 'Titel', min: FEEDBACK_MIN_TITLE, aktuell: titleT.length })
-      setFeedbackBanner(`Titel zu kurz: mindestens ${FEEDBACK_MIN_TITLE} Zeichen (aktuell ${titleT.length}).`)
-      setTimeout(() => setFeedbackBanner(''), 8000)
+      setFeedbackNotice({
+        variant: 'error',
+        text: `Titel zu kurz: mindestens ${FEEDBACK_MIN_TITLE} Zeichen (aktuell ${titleT.length}).`,
+      })
+      setTimeout(() => setFeedbackNotice({ variant: null, text: '' }), 8000)
       return
     }
     if (bodyT.length < FEEDBACK_MIN_BODY) {
-      appendFeedbackLog('Validierung fehlgeschlagen', { feld: 'Beschreibung', min: FEEDBACK_MIN_BODY, aktuell: bodyT.length })
-      setFeedbackBanner(
-        `Beschreibung zu kurz: mindestens ${FEEDBACK_MIN_BODY} Zeichen (aktuell ${bodyT.length}). Kurz reicht nicht – der Server lehnt kürzere Texte ab.`,
-      )
-      setTimeout(() => setFeedbackBanner(''), 10000)
+      setFeedbackNotice({
+        variant: 'error',
+        text: `Beschreibung zu kurz: mindestens ${FEEDBACK_MIN_BODY} Zeichen (aktuell ${bodyT.length}).`,
+      })
+      setTimeout(() => setFeedbackNotice({ variant: null, text: '' }), 10000)
       return
     }
 
     setFeedbackSending(true)
-    let banner = ''
+    let successText = ''
+    let errorText = ''
     try {
       const upload = await uploadFeedbackFiles(user.id, feedbackFiles)
-      appendFeedbackLog('Storage-Upload', { ok: upload.ok, pathCount: upload.paths?.length ?? 0, message: upload.message })
       if (!upload.ok) {
-        banner = upload.message || 'Upload fehlgeschlagen.'
+        errorText = upload.message || 'Upload fehlgeschlagen.'
       } else {
         const sub = await submitFeedback({
           title: feedbackTitle,
@@ -160,29 +135,26 @@ export default function Settings() {
           category: feedbackCategory,
           attachmentPaths: upload.paths,
         })
-        appendFeedbackLog('Edge Function feedback-submit', {
-          ok: sub.ok,
-          message: sub.message,
-          details: sub.details,
-        })
         if (sub.ok) {
           setFeedbackTitle('')
           setFeedbackBody('')
           setFeedbackFiles(null)
           setFileInputKey((k) => k + 1)
-          banner = sub.message || 'Vielen Dank! Dein Feedback wurde übermittelt.'
+          successText = sub.message || 'Vielen Dank! Dein Feedback wurde erfolgreich abgesendet.'
         } else {
-          banner = sub.message || 'Senden fehlgeschlagen.'
+          errorText = sub.message || 'Senden fehlgeschlagen.'
         }
       }
     } catch (err) {
-      appendFeedbackLog('Unbehandelte Exception', { name: err?.name, message: err?.message })
-      banner = String(err?.message || err || 'Unerwarteter Fehler.')
+      errorText = String(err?.message || err || 'Unerwarteter Fehler.')
     } finally {
       setFeedbackSending(false)
-      if (banner) {
-        setFeedbackBanner(banner)
-        setTimeout(() => setFeedbackBanner(''), 8000)
+      if (successText) {
+        setFeedbackNotice({ variant: 'success', text: successText })
+        setTimeout(() => setFeedbackNotice({ variant: null, text: '' }), 9000)
+      } else if (errorText) {
+        setFeedbackNotice({ variant: 'error', text: errorText })
+        setTimeout(() => setFeedbackNotice({ variant: null, text: '' }), 8000)
       }
     }
   }
@@ -233,10 +205,16 @@ export default function Settings() {
           {privacyInfo}
         </div>
       )}
-      {feedbackBanner && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 flex items-center gap-2 text-amber-900 text-sm">
+      {feedbackNotice.variant === 'success' && feedbackNotice.text && (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 flex items-center gap-2 text-emerald-800 text-sm">
           <Check className="w-4 h-4 shrink-0" />
-          {feedbackBanner}
+          {feedbackNotice.text}
+        </div>
+      )}
+      {feedbackNotice.variant === 'error' && feedbackNotice.text && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 flex items-center gap-2 text-amber-900 text-sm">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          {feedbackNotice.text}
         </div>
       )}
 
@@ -266,7 +244,7 @@ export default function Settings() {
         <p className="text-sm text-surface-500">
           Melde Fehler, Wünsche oder Verbesserungsvorschläge. Optional bis zu sechs Screenshots (PNG, JPEG, WebP, GIF, max. 5&nbsp;MB pro Datei).
           <span className="block mt-2 text-surface-600">
-            <strong className="font-medium text-surface-800">Pflichtlängen:</strong> Titel mindestens {FEEDBACK_MIN_TITLE} Zeichen, Beschreibung mindestens {FEEDBACK_MIN_BODY} Zeichen (ohne Leerzeichen am Rand) – sonst wird nichts an den Server geschickt.
+            <strong className="font-medium text-surface-800">Pflichtlängen:</strong> Titel mindestens 2 Zeichen, Beschreibung mindestens 10 Zeichen
           </span>
           {!feedbackAvailable && (
             <span className="block mt-1 text-amber-800"> Hinweis: Nur mit E-Mail-Konto (Supabase), nicht mit rein lokalen Demo-Logins.</span>
@@ -349,65 +327,6 @@ export default function Settings() {
             Absenden
           </button>
         </div>
-
-        <details
-          className="rounded-xl border border-surface-200 bg-surface-50/90 p-3 text-sm"
-          onToggle={(e) => {
-            if (e.target.open && feedbackDiag === null && !feedbackDiagLoading) {
-              void refreshFeedbackDiag()
-            }
-          }}
-        >
-          <summary className="cursor-pointer font-medium text-surface-800 flex items-center gap-2 select-none list-none [&::-webkit-details-marker]:hidden">
-            <Bug className="w-4 h-4 text-amber-600 shrink-0" />
-            Feedback-Diagnose (Debug)
-          </summary>
-          <div className="mt-3 space-y-3">
-            <p className="text-xs text-surface-500 leading-relaxed">
-              Umgebungsvariablen, Supabase-Session und Ablauf beim Klick auf Absenden. Text kopieren und bei Support mitschicken.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                className="btn-secondary text-xs !py-1.5 !px-3 inline-flex items-center gap-1.5"
-                onClick={() => void refreshFeedbackDiag()}
-                disabled={feedbackDiagLoading}
-              >
-                {feedbackDiagLoading ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
-                    Lädt…
-                  </>
-                ) : (
-                  'Diagnose aktualisieren'
-                )}
-              </button>
-              <button
-                type="button"
-                className="btn-secondary text-xs !py-1.5 !px-3"
-                onClick={() => {
-                  const text = JSON.stringify({ diag: feedbackDiag, log: feedbackLog }, null, 2)
-                  void navigator.clipboard?.writeText(text).then(() => appendFeedbackLog('Diagnose + Log in Zwischenablage kopiert', {}))
-                }}
-              >
-                Alles kopieren
-              </button>
-              <button type="button" className="btn-secondary text-xs !py-1.5 !px-3" onClick={() => setFeedbackLog([])}>
-                Log leeren
-              </button>
-            </div>
-            {feedbackDiag && (
-              <pre className="text-xs bg-slate-900 text-emerald-100/95 p-3 rounded-lg overflow-x-auto max-h-44 overflow-y-auto whitespace-pre-wrap break-all">
-                {JSON.stringify(feedbackDiag, null, 2)}
-              </pre>
-            )}
-            {feedbackLog.length > 0 && (
-              <pre className="text-xs bg-slate-800 text-slate-100 p-3 rounded-lg overflow-x-auto max-h-52 overflow-y-auto whitespace-pre-wrap break-all">
-                {feedbackLog.join('\n\n— — —\n\n')}
-              </pre>
-            )}
-          </div>
-        </details>
       </div>
 
       <div className="card p-6 space-y-3">

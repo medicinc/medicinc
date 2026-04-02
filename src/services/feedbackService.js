@@ -1,4 +1,4 @@
-import { getSupabaseClient, isUuid } from '../lib/supabaseClient'
+import { getSupabaseClient } from '../lib/supabaseClient'
 
 export const FEEDBACK_BUCKET = 'feedback-attachments'
 const MAX_FILES = 6
@@ -29,12 +29,6 @@ function decodeJwtPayload(token) {
   } catch (_e) {
     return null
   }
-}
-
-/** JWT payload `exp` (seconds) → ISO string, nur für Diagnose */
-function accessTokenExpiryIso(token) {
-  const json = decodeJwtPayload(token)
-  return json?.exp ? new Date(json.exp * 1000).toISOString() : null
 }
 
 function accessTokenIss(token) {
@@ -104,47 +98,6 @@ function expectedJwtIssuer() {
     .replace(/\/+$/, '')
   if (!base.startsWith('http')) return null
   return `${base}/auth/v1`
-}
-
-/** Laufzeit-Snapshot für das Feedback-Formular (Debug / Support). */
-export async function collectFeedbackDiagnostics(appUser) {
-  const urlSet = Boolean(String(import.meta.env.VITE_SUPABASE_URL || '').trim())
-  const anonSet = Boolean(String(import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim())
-  const sb = getSupabaseClient()
-  let sessionUserId = null
-  let hasJwt = false
-  let sessionError = null
-  let sessionToken = ''
-  if (sb) {
-    const { data, error } = await sb.auth.getSession()
-    sessionError = error?.message || null
-    sessionUserId = data?.session?.user?.id ?? null
-    sessionToken = String(data?.session?.access_token || '')
-    const anon = String(import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim()
-    hasJwt = Boolean(sessionToken && sessionToken.split('.').length === 3 && sessionToken !== anon)
-  }
-  const aid = appUser?.id != null ? String(appUser.id) : ''
-  const iss = sessionToken ? accessTokenIss(sessionToken) : null
-  const expIso = sessionToken ? accessTokenExpiryIso(sessionToken) : null
-  const expectedIss = expectedJwtIssuer()
-  return {
-    envSupabaseUrlSet: urlSet,
-    envAnonKeySet: anonSet,
-    supabaseClientReady: Boolean(sb),
-    appUserId: aid || null,
-    appUserIdLooksLikeUuid: aid ? isUuid(aid) : false,
-    authSessionUserId: sessionUserId,
-    sessionMatchesAppUser:
-      aid && sessionUserId ? aid === String(sessionUserId) : aid || sessionUserId ? false : null,
-    hasUserAccessToken: hasJwt,
-    sessionError,
-    feedbackSubmitUrl: getFunctionUrl('feedback-submit') || null,
-    accessTokenExpiresAt: expIso,
-    accessTokenIssuer: iss,
-    expectedJwtIssuer: expectedIss,
-    issuerMatchesEnv:
-      iss && expectedIss ? iss === expectedIss : iss || expectedIss ? false : null,
-  }
 }
 
 export async function uploadFeedbackFiles(userId, fileList) {
