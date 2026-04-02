@@ -9,6 +9,9 @@ import { requestSupabaseDsarDelete, requestSupabaseDsarExport } from '../service
 import { uploadFeedbackFiles, submitFeedback, collectFeedbackDiagnostics } from '../services/feedbackService'
 import { getSupabaseClient, isUuid } from '../lib/supabaseClient'
 
+const FEEDBACK_MIN_TITLE = 2
+const FEEDBACK_MIN_BODY = 10
+
 export default function Settings() {
   const { user, updateUser, deleteUserAccountData } = useAuth()
   const [textBlocks, setTextBlocks] = useState(Array.isArray(user?.documentTextBlocks) ? user.documentTextBlocks.join('\n') : '')
@@ -128,16 +131,18 @@ export default function Settings() {
 
     const titleT = feedbackTitle.trim()
     const bodyT = feedbackBody.trim()
-    if (titleT.length < 2) {
-      appendFeedbackLog('Validierung fehlgeschlagen', { feld: 'Titel', min: 2, aktuell: titleT.length })
-      setFeedbackBanner('Bitte einen Titel mit mindestens 2 Zeichen eingeben.')
+    if (titleT.length < FEEDBACK_MIN_TITLE) {
+      appendFeedbackLog('Validierung fehlgeschlagen', { feld: 'Titel', min: FEEDBACK_MIN_TITLE, aktuell: titleT.length })
+      setFeedbackBanner(`Titel zu kurz: mindestens ${FEEDBACK_MIN_TITLE} Zeichen (aktuell ${titleT.length}).`)
       setTimeout(() => setFeedbackBanner(''), 8000)
       return
     }
-    if (bodyT.length < 10) {
-      appendFeedbackLog('Validierung fehlgeschlagen', { feld: 'Beschreibung', min: 10, aktuell: bodyT.length })
-      setFeedbackBanner('Bitte eine Beschreibung mit mindestens 10 Zeichen (Server-Vorgabe).')
-      setTimeout(() => setFeedbackBanner(''), 8000)
+    if (bodyT.length < FEEDBACK_MIN_BODY) {
+      appendFeedbackLog('Validierung fehlgeschlagen', { feld: 'Beschreibung', min: FEEDBACK_MIN_BODY, aktuell: bodyT.length })
+      setFeedbackBanner(
+        `Beschreibung zu kurz: mindestens ${FEEDBACK_MIN_BODY} Zeichen (aktuell ${bodyT.length}). Kurz reicht nicht – der Server lehnt kürzere Texte ab.`,
+      )
+      setTimeout(() => setFeedbackBanner(''), 10000)
       return
     }
 
@@ -260,6 +265,9 @@ export default function Settings() {
         </h2>
         <p className="text-sm text-surface-500">
           Melde Fehler, Wünsche oder Verbesserungsvorschläge. Optional bis zu sechs Screenshots (PNG, JPEG, WebP, GIF, max. 5&nbsp;MB pro Datei).
+          <span className="block mt-2 text-surface-600">
+            <strong className="font-medium text-surface-800">Pflichtlängen:</strong> Titel mindestens {FEEDBACK_MIN_TITLE} Zeichen, Beschreibung mindestens {FEEDBACK_MIN_BODY} Zeichen (ohne Leerzeichen am Rand) – sonst wird nichts an den Server geschickt.
+          </span>
           {!feedbackAvailable && (
             <span className="block mt-1 text-amber-800"> Hinweis: Nur mit E-Mail-Konto (Supabase), nicht mit rein lokalen Demo-Logins.</span>
           )}
@@ -288,7 +296,14 @@ export default function Settings() {
               placeholder="Kurz beschreiben, worum es geht"
               maxLength={200}
               disabled={feedbackSending}
+              aria-describedby="feedback-title-hint"
             />
+            <p id="feedback-title-hint" className="mt-1 text-xs text-surface-500">
+              Aktuell {feedbackTitle.trim().length} Zeichen · mindestens {FEEDBACK_MIN_TITLE} nötig
+              {feedbackTitle.trim().length > 0 && feedbackTitle.trim().length < FEEDBACK_MIN_TITLE && (
+                <span className="text-red-600 font-medium"> (noch {FEEDBACK_MIN_TITLE - feedbackTitle.trim().length})</span>
+              )}
+            </p>
           </label>
         </div>
         <label className="block text-sm text-surface-700">
@@ -299,7 +314,14 @@ export default function Settings() {
             className="input-field min-h-[160px] resize-y"
             placeholder="Was ist passiert? Was hast du erwartet? Schritte zur Reproduktion …"
             disabled={feedbackSending}
+            aria-describedby="feedback-body-hint"
           />
+          <p id="feedback-body-hint" className="mt-1 text-xs text-surface-500">
+            Aktuell {feedbackBody.trim().length} Zeichen · mindestens {FEEDBACK_MIN_BODY} nötig
+            {feedbackBody.trim().length > 0 && feedbackBody.trim().length < FEEDBACK_MIN_BODY && (
+              <span className="text-red-600 font-medium"> (noch {FEEDBACK_MIN_BODY - feedbackBody.trim().length})</span>
+            )}
+          </p>
         </label>
         <label className="flex flex-col gap-2 text-sm text-surface-700">
           <span className="font-medium inline-flex items-center gap-2">

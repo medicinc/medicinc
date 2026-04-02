@@ -169,21 +169,30 @@ export default function Landing() {
                   <Activity className="w-4 h-4 shrink-0" aria-hidden />
                   Medizinische Simulation – Alpha Release in Vorbereitung
                 </div>
-                <button
-                  type="button"
-                  onClick={scrollToAiChat}
-                  className="group inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-violet-800 bg-gradient-to-r from-violet-100 to-fuchsia-100 border border-violet-200/90 shadow-sm shadow-violet-500/10 hover:from-violet-200/90 hover:to-fuchsia-100 hover:border-violet-300 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
-                  aria-label="Zum Abschnitt KI-Simulationsdialoge scrollen"
-                >
-                  <Sparkles className="w-4 h-4 text-violet-600 shrink-0" aria-hidden />
-                  <span>KI-Patient*innen-Chat in der Simulation</span>
-                  <ChevronRight className="w-4 h-4 text-violet-500 opacity-80 group-hover:translate-x-0.5 transition-transform shrink-0" aria-hidden />
-                </button>
               </div>
               <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-surface-900 leading-[1.1]">
                 Klinik. Rettungsdienst. Management.
                 <span className="gradient-text block mt-1">Drei Rollen, eine Simulation.</span>
               </h1>
+
+              <button
+                type="button"
+                onClick={scrollToAiChat}
+                className="lg:hidden mt-5 w-full max-w-md text-left rounded-2xl p-[1px] bg-gradient-to-br from-violet-400 via-fuchsia-400 to-primary-500 shadow-md shadow-violet-500/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
+                aria-label="Zum Abschnitt KI-Simulationsdialoge scrollen"
+              >
+                <div className="rounded-2xl bg-white/95 px-4 py-3 flex items-center gap-3 border border-white/80">
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-violet-600 to-primary-600 flex items-center justify-center shrink-0 shadow-md">
+                    <Brain className="w-5 h-5 text-white" aria-hidden />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-violet-600">KI-Feature</p>
+                    <p className="font-semibold text-surface-900 text-sm">Patient*innen-Chat in der Simulation</p>
+                    <p className="text-xs text-violet-700 font-medium mt-0.5">Tippen für Details ↓</p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-violet-400 shrink-0" aria-hidden />
+                </div>
+              </button>
 
               <p className="mt-6 text-lg sm:text-xl text-surface-600 leading-relaxed max-w-lg">
                 Von realistischen Patientenfällen über Rettungsdiensteinsätze bis zur
@@ -219,8 +228,50 @@ export default function Landing() {
               </div>
             </div>
 
-            <div className="hidden lg:block relative">
-              <div className="relative">
+            <div className="hidden lg:flex flex-col gap-8 items-end relative">
+              <button
+                type="button"
+                onClick={scrollToAiChat}
+                className="group w-full max-w-[340px] text-left rounded-2xl p-[1px] bg-gradient-to-br from-violet-400 via-fuchsia-400 to-primary-500 shadow-lg shadow-violet-500/20 hover:shadow-violet-500/35 transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
+                aria-label="Zum Abschnitt KI-Simulationsdialoge scrollen"
+              >
+                <div className="rounded-2xl bg-white/95 backdrop-blur-sm px-5 py-4 sm:px-6 sm:py-5 border border-white/80">
+                  <div className="flex items-start gap-4">
+                    <div className="relative shrink-0">
+                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-violet-500 to-primary-600 opacity-90 blur-md group-hover:opacity-100 transition-opacity" aria-hidden />
+                      <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-600 to-primary-600 flex items-center justify-center shadow-inner">
+                        <Brain className="w-7 h-7 text-white" aria-hidden />
+                      </div>
+                    </div>
+                    <div className="min-w-0 flex-1 pt-0.5">
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-violet-600 flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5" aria-hidden />
+                        Neu in Medic Inc
+                      </p>
+                      <p className="mt-1 font-display text-lg font-bold text-surface-900 leading-snug">
+                        KI-Patient*innen-Chat
+                      </p>
+                      <p className="mt-1.5 text-sm text-surface-600 leading-relaxed">
+                        Dynamische Simulationsdialoge statt fester Texte – für Anamnese &amp; Teamtraining.
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <span className="text-[11px] font-semibold uppercase tracking-wide text-violet-700 bg-violet-50 border border-violet-100 px-2.5 py-1 rounded-full">
+                          Simulation
+                        </span>
+                        <span className="text-[11px] font-semibold uppercase tracking-wide text-primary-700 bg-primary-50 border border-primary-100 px-2.5 py-1 rounded-full">
+                          Lernfokus
+                        </span>
+                      </div>
+                      <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-violet-700 group-hover:text-violet-800">
+                        Feature entdecken
+                        <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" aria-hidden />
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </button>
+
+              <div className="relative w-full">
                 <div className="card p-6 animate-float">
                   <div className="flex items-center gap-4 mb-4">
                     <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center">
@@ -262,7 +313,7 @@ export default function Landing() {
                   </div>
                 </div>
 
-                <div className="absolute -bottom-4 -left-4 card px-4 py-3 flex items-center gap-3">
+                <div className="absolute -bottom-4 -left-4 card px-4 py-3 flex items-center gap-3 z-10">
                   <div className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center">
                     <Shield className="w-5 h-5 text-primary-600" />
                   </div>
