@@ -54,14 +54,17 @@ function raceTimeout(promise, ms, label) {
 /**
  * Access-Token für Edge Functions. Verwendet bei noch gültigem Token kein refreshSession
  * (refresh kann im Browser hängen bleiben). Sonst refresh mit Timeout, Fallback getSession.
+ * @param {{ forceRefresh?: boolean }} opts — true = immer refreshSession versuchen (z. B. nach Gateway-401).
  */
-async function getRefreshedAccessToken(sb) {
+async function getRefreshedAccessToken(sb, opts = {}) {
+  const forceRefresh = Boolean(opts.forceRefresh)
   const { data: cur } = await sb.auth.getSession()
   const tokenNow = String(cur?.session?.access_token || '')
   const exp = decodeJwtPayload(tokenNow)?.exp
   const now = Math.floor(Date.now() / 1000)
   if (
-    tokenNow
+    !forceRefresh
+    && tokenNow
     && tokenNow.split('.').length === 3
     && exp
     && exp > now + TOKEN_SKIP_REFRESH_SEC
@@ -201,23 +204,40 @@ export async function submitFeedback({ title, body, category, attachmentPaths = 
     attachmentPaths,
   }
 
-  /** Direkter fetch mit Timeout (ohne functions.invoke). */
-  const controller = new AbortController()
-  const fetchTimeoutId = setTimeout(() => controller.abort(), FEEDBACK_FETCH_TIMEOUT_MS)
-  let res
-  try {
-    res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: anon,
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(payload),
-      signal: controller.signal,
-    })
-  } catch (e) {
-    clearTimeout(fetchTimeoutId)
+  function isGatewayInvalidJwt(res, jsonBody) {
+    if (res.status !== 401) return false
+    const m = typeof jsonBody?.message === 'string' ? jsonBody.message.toLowerCase() : ''
+    return m.includes('jwt') || m.includes('invalid')
+  }
+
+  async function fetchFeedbackSubmit(accessToken) {
+    const controller = new AbortController()
+    const fetchTimeoutId = setTimeout(() => controller.abort(), FEEDBACK_FETCH_TIMEOUT_MS)
+    try {
+      const r = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: anon,
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      })
+      clearTimeout(fetchTimeoutId)
+      return { ok: true, res: r }
+    } catch (e) {
+      clearTimeout(fetchTimeoutId)
+      return { ok: false, error: e }
+    }
+  }
+
+  let activeToken = token
+  let attemptMeta = { refreshed, usedCachedToken, retriedAfterJwt401: false }
+
+  let fetchOutcome = await fetchFeedbackSubmit(activeToken)
+  if (!fetchOutcome.ok) {
+    const e = fetchOutcome.error
     const name = e?.name || ''
     const msg = String(e?.message || e || '')
     const aborted = name === 'AbortError' || msg.includes('aborted')
@@ -228,22 +248,60 @@ export async function submitFeedback({ title, body, category, attachmentPaths = 
         : `Netzwerkfehler: ${msg || 'Unbekannt'}`,
       details: {
         phase: aborted ? 'fetch_timeout' : 'fetch_network',
-        sessionRefreshed: refreshed,
-        usedCachedToken,
+        sessionRefreshed: attemptMeta.refreshed,
+        usedCachedToken: attemptMeta.usedCachedToken,
       },
     }
   }
-  clearTimeout(fetchTimeoutId)
+
+  let res = fetchOutcome.res
+  let j = await res.json().catch(() => null)
+
+  if (!res.ok && isGatewayInvalidJwt(res, j)) {
+    const r2 = await getRefreshedAccessToken(sb, { forceRefresh: true })
+    if (r2.token && r2.token !== activeToken) {
+      activeToken = r2.token
+      attemptMeta = {
+        refreshed: r2.refreshed,
+        usedCachedToken: r2.usedCachedToken,
+        retriedAfterJwt401: true,
+      }
+      fetchOutcome = await fetchFeedbackSubmit(activeToken)
+      if (fetchOutcome.ok) {
+        res = fetchOutcome.res
+        j = await res.json().catch(() => null)
+      }
+    } else if (r2.token === activeToken) {
+      attemptMeta.retriedAfterJwt401 = true
+      attemptMeta.refreshNoNewToken = true
+    }
+  }
+
+  if (!fetchOutcome.ok) {
+    const e = fetchOutcome.error
+    const name = e?.name || ''
+    const msg = String(e?.message || e || '')
+    const aborted = name === 'AbortError' || msg.includes('aborted')
+    return {
+      ok: false,
+      message: aborted
+        ? `Zeitüberschreitung: Server hat nach ${Math.round(FEEDBACK_FETCH_TIMEOUT_MS / 1000)}s nicht geantwortet.`
+        : `Netzwerkfehler: ${msg || 'Unbekannt'}`,
+      details: {
+        phase: aborted ? 'fetch_timeout_retry' : 'fetch_network_retry',
+        ...attemptMeta,
+      },
+    }
+  }
 
   if (!res) {
     return {
       ok: false,
       message: 'Netzwerkfehler beim Senden.',
-      details: { phase: 'fetch_no_response', sessionRefreshed: refreshed, usedCachedToken },
+      details: { phase: 'fetch_no_response', ...attemptMeta },
     }
   }
 
-  const j = await res.json().catch(() => null)
   if (!res.ok) {
     const msg = typeof j?.message === 'string' ? j.message : `HTTP ${res.status}`
     return {
@@ -253,19 +311,22 @@ export async function submitFeedback({ title, body, category, attachmentPaths = 
         phase: 'fetch',
         status: res.status,
         body: j,
-        sessionRefreshed: refreshed,
-        usedCachedToken,
-        tokenIssuer: accessTokenIss(token),
+        tokenIssuer: accessTokenIss(activeToken),
         expectedIssuer: expectedJwtIssuer(),
+        hint:
+          res.status === 401 && String(msg).toLowerCase().includes('jwt')
+            ? 'Supabase-Gateway lehnt das JWT ab. feedback-submit mit verify_jwt=false deployen (supabase/config.toml) – die Function prüft den User weiterhin per getUser().'
+            : undefined,
+        ...attemptMeta,
       },
     }
   }
   if (j?.message && !j?.ok) {
-    return { ok: false, message: j.message, details: { phase: 'fetch_body_error', data: j, usedCachedToken } }
+    return { ok: false, message: j.message, details: { phase: 'fetch_body_error', data: j, ...attemptMeta } }
   }
   return {
     ok: true,
     message: j?.message || 'Gesendet.',
-    details: { phase: 'fetch_ok', data: j, sessionRefreshed: refreshed, usedCachedToken },
+    details: { phase: 'fetch_ok', data: j, ...attemptMeta },
   }
 }

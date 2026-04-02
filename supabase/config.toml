@@ -1,0 +1,6 @@
+# Supabase CLI / Edge Functions
+# feedback-submit: Die Plattform-Gateway-Prüfung kann bei manchen User-JWTs fälschlich
+# "Invalid JWT" liefern, obwohl Storage & auth.getUser() denselben Token akzeptieren.
+# Die Function validiert den User weiterhin per createClient(anon).auth.getUser(token).
+[functions.feedback-submit]
+verify_jwt = false
