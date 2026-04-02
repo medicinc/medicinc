@@ -4,6 +4,10 @@ export const FEEDBACK_BUCKET = 'feedback-attachments'
 const MAX_FILES = 6
 const MAX_BYTES = 5 * 1024 * 1024
 const ALLOWED_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif'])
+const REFRESH_SESSION_TIMEOUT_MS = 12_000
+const FEEDBACK_FETCH_TIMEOUT_MS = 28_000
+/** Access-Token mindestens so viele Sekunden gültig → kein refreshSession (vermeidet Hänger). */
+const TOKEN_SKIP_REFRESH_SEC = 120
 
 function sanitizeFileName(name) {
   return String(name || 'file').replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 80) || 'file'
@@ -38,17 +42,57 @@ function accessTokenIss(token) {
   return typeof json?.iss === 'string' ? json.iss : null
 }
 
+function raceTimeout(promise, ms, label) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      setTimeout(() => reject(new Error(`${label} (${ms}ms)`)), ms)
+    }),
+  ])
+}
+
 /**
- * Frischer Access-Token für Edge Functions (Gateway prüft JWT; abgelaufene Tokens → "Invalid JWT").
+ * Access-Token für Edge Functions. Verwendet bei noch gültigem Token kein refreshSession
+ * (refresh kann im Browser hängen bleiben). Sonst refresh mit Timeout, Fallback getSession.
  */
 async function getRefreshedAccessToken(sb) {
-  const { data: refreshData, error: refreshErr } = await sb.auth.refreshSession()
-  const session = refreshData?.session || (await sb.auth.getSession()).data?.session
-  const token = String(session?.access_token || '')
-  if (!token || token.split('.').length !== 3) {
-    return { token: null, error: refreshErr?.message || 'Kein Access-Token.', refreshed: false }
+  const { data: cur } = await sb.auth.getSession()
+  const tokenNow = String(cur?.session?.access_token || '')
+  const exp = decodeJwtPayload(tokenNow)?.exp
+  const now = Math.floor(Date.now() / 1000)
+  if (
+    tokenNow
+    && tokenNow.split('.').length === 3
+    && exp
+    && exp > now + TOKEN_SKIP_REFRESH_SEC
+  ) {
+    return { token: tokenNow, error: null, refreshed: false, usedCachedToken: true }
   }
-  return { token, error: null, refreshed: Boolean(refreshData?.session) }
+
+  let refreshResult = null
+  try {
+    refreshResult = await raceTimeout(sb.auth.refreshSession(), REFRESH_SESSION_TIMEOUT_MS, 'refreshSession')
+  } catch (_e) {
+    refreshResult = null
+  }
+
+  const session = refreshResult?.data?.session || (await sb.auth.getSession()).data?.session
+  const token = String(session?.access_token || '')
+  const refreshErr = refreshResult?.error
+  if (!token || token.split('.').length !== 3) {
+    return {
+      token: null,
+      error: refreshErr?.message || 'Kein Access-Token.',
+      refreshed: false,
+      usedCachedToken: false,
+    }
+  }
+  return {
+    token,
+    error: null,
+    refreshed: Boolean(refreshResult?.data?.session),
+    usedCachedToken: false,
+  }
 }
 
 function expectedJwtIssuer() {
@@ -141,12 +185,7 @@ export async function submitFeedback({ title, body, category, attachmentPaths = 
     return { ok: false, message: 'VITE_SUPABASE_ANON_KEY fehlt.', details: { reason: 'no_anon' } }
   }
 
-  const { error: userErr } = await sb.auth.getUser()
-  if (userErr) {
-    await sb.auth.refreshSession().catch(() => {})
-  }
-
-  const { token, error: tokenErr, refreshed } = await getRefreshedAccessToken(sb)
+  const { token, error: tokenErr, refreshed, usedCachedToken } = await getRefreshedAccessToken(sb)
   if (!token) {
     return {
       ok: false,
@@ -162,22 +201,45 @@ export async function submitFeedback({ title, body, category, attachmentPaths = 
     attachmentPaths,
   }
 
-  /** Direkter fetch (ohne functions.invoke): vermeidet Header-Kollisionen mit dem Functions-Client. */
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      apikey: anon,
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(payload),
-  }).catch((e) => null)
+  /** Direkter fetch mit Timeout (ohne functions.invoke). */
+  const controller = new AbortController()
+  const fetchTimeoutId = setTimeout(() => controller.abort(), FEEDBACK_FETCH_TIMEOUT_MS)
+  let res
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: anon,
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    })
+  } catch (e) {
+    clearTimeout(fetchTimeoutId)
+    const name = e?.name || ''
+    const msg = String(e?.message || e || '')
+    const aborted = name === 'AbortError' || msg.includes('aborted')
+    return {
+      ok: false,
+      message: aborted
+        ? `Zeitüberschreitung: Server hat nach ${Math.round(FEEDBACK_FETCH_TIMEOUT_MS / 1000)}s nicht geantwortet.`
+        : `Netzwerkfehler: ${msg || 'Unbekannt'}`,
+      details: {
+        phase: aborted ? 'fetch_timeout' : 'fetch_network',
+        sessionRefreshed: refreshed,
+        usedCachedToken,
+      },
+    }
+  }
+  clearTimeout(fetchTimeoutId)
 
   if (!res) {
     return {
       ok: false,
       message: 'Netzwerkfehler beim Senden.',
-      details: { phase: 'fetch_network', sessionRefreshed: refreshed },
+      details: { phase: 'fetch_no_response', sessionRefreshed: refreshed, usedCachedToken },
     }
   }
 
@@ -192,17 +254,18 @@ export async function submitFeedback({ title, body, category, attachmentPaths = 
         status: res.status,
         body: j,
         sessionRefreshed: refreshed,
+        usedCachedToken,
         tokenIssuer: accessTokenIss(token),
         expectedIssuer: expectedJwtIssuer(),
       },
     }
   }
   if (j?.message && !j?.ok) {
-    return { ok: false, message: j.message, details: { phase: 'fetch_body_error', data: j } }
+    return { ok: false, message: j.message, details: { phase: 'fetch_body_error', data: j, usedCachedToken } }
   }
   return {
     ok: true,
     message: j?.message || 'Gesendet.',
-    details: { phase: 'fetch_ok', data: j, sessionRefreshed: refreshed },
+    details: { phase: 'fetch_ok', data: j, sessionRefreshed: refreshed, usedCachedToken },
   }
 }
