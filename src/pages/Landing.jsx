@@ -162,7 +162,7 @@ export default function Landing() {
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent-200/20 rounded-full blur-3xl" />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <div className="grid lg:grid-cols-2 gap-12 xl:gap-16 lg:items-start">
             <div>
               <div className="flex flex-wrap items-center gap-2 mb-4">
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary-50 border border-primary-100 rounded-full text-sm font-medium text-primary-700">
@@ -228,50 +228,54 @@ export default function Landing() {
               </div>
             </div>
 
-            <div className="hidden lg:flex flex-col gap-8 items-end relative">
-              <button
-                type="button"
-                onClick={scrollToAiChat}
-                className="group w-full max-w-[340px] text-left rounded-2xl p-[1px] bg-gradient-to-br from-violet-400 via-fuchsia-400 to-primary-500 shadow-lg shadow-violet-500/20 hover:shadow-violet-500/35 transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
-                aria-label="Zum Abschnitt KI-Simulationsdialoge scrollen"
-              >
-                <div className="rounded-2xl bg-white/95 backdrop-blur-sm px-5 py-4 sm:px-6 sm:py-5 border border-white/80">
-                  <div className="flex items-start gap-4">
-                    <div className="relative shrink-0">
-                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-violet-500 to-primary-600 opacity-90 blur-md group-hover:opacity-100 transition-opacity" aria-hidden />
-                      <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-600 to-primary-600 flex items-center justify-center shadow-inner">
-                        <Brain className="w-7 h-7 text-white" aria-hidden />
+            <div className="hidden lg:flex flex-col items-end w-full relative">
+              {/* Abstand = Alpha-Pill + mb-4 links, damit die Karte optisch auf Höhe der Headline sitzt */}
+              <div className="w-full max-w-[380px] flex flex-col items-end gap-5">
+                <div className="h-14 w-full shrink-0" aria-hidden />
+                <button
+                  type="button"
+                  onClick={scrollToAiChat}
+                  className="group w-full text-left rounded-2xl p-[1px] bg-gradient-to-br from-violet-400 via-fuchsia-400 to-primary-500 shadow-xl shadow-violet-500/25 ring-1 ring-violet-500/10 hover:shadow-violet-500/40 hover:ring-violet-400/25 transition-all duration-300 hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
+                  aria-label="Zum Abschnitt KI-Simulationsdialoge scrollen"
+                >
+                  <div className="rounded-2xl bg-gradient-to-br from-white via-white to-violet-50/80 backdrop-blur-sm px-5 py-4 sm:px-6 sm:py-5 border border-white/90 shadow-inner">
+                    <div className="flex items-start gap-4">
+                      <div className="relative shrink-0">
+                        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-violet-500 to-primary-600 opacity-90 blur-md group-hover:opacity-100 transition-opacity" aria-hidden />
+                        <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-600 to-primary-600 flex items-center justify-center shadow-inner">
+                          <Brain className="w-7 h-7 text-white" aria-hidden />
+                        </div>
                       </div>
-                    </div>
-                    <div className="min-w-0 flex-1 pt-0.5">
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-violet-600 flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5" aria-hidden />
-                        Neu in Medic Inc
-                      </p>
-                      <p className="mt-1 font-display text-lg font-bold text-surface-900 leading-snug">
-                        KI-Patient*innen-Chat
-                      </p>
-                      <p className="mt-1.5 text-sm text-surface-600 leading-relaxed">
-                        Dynamische Simulationsdialoge statt fester Texte – für Anamnese &amp; Teamtraining.
-                      </p>
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        <span className="text-[11px] font-semibold uppercase tracking-wide text-violet-700 bg-violet-50 border border-violet-100 px-2.5 py-1 rounded-full">
-                          Simulation
-                        </span>
-                        <span className="text-[11px] font-semibold uppercase tracking-wide text-primary-700 bg-primary-50 border border-primary-100 px-2.5 py-1 rounded-full">
-                          Lernfokus
+                      <div className="min-w-0 flex-1 pt-0.5">
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-violet-600 flex items-center gap-1.5">
+                          <Sparkles className="w-3.5 h-3.5" aria-hidden />
+                          Neu in Medic Inc
+                        </p>
+                        <p className="mt-1 font-display text-lg font-bold text-surface-900 leading-snug">
+                          KI-Patient*innen-Chat
+                        </p>
+                        <p className="mt-1.5 text-sm text-surface-600 leading-relaxed">
+                          Dynamische Simulationsdialoge statt fester Texte – für Anamnese &amp; Teamtraining.
+                        </p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <span className="text-[11px] font-semibold uppercase tracking-wide text-violet-700 bg-violet-50 border border-violet-100 px-2.5 py-1 rounded-full">
+                            Simulation
+                          </span>
+                          <span className="text-[11px] font-semibold uppercase tracking-wide text-primary-700 bg-primary-50 border border-primary-100 px-2.5 py-1 rounded-full">
+                            Lernfokus
+                          </span>
+                        </div>
+                        <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-violet-700 group-hover:text-violet-800">
+                          Feature entdecken
+                          <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" aria-hidden />
                         </span>
                       </div>
-                      <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-violet-700 group-hover:text-violet-800">
-                        Feature entdecken
-                        <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" aria-hidden />
-                      </span>
                     </div>
                   </div>
-                </div>
-              </button>
+                </button>
+              </div>
 
-              <div className="relative w-full">
+              <div className="relative w-full mt-4 xl:mt-6">
                 <div className="card p-6 animate-float">
                   <div className="flex items-center gap-4 mb-4">
                     <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center">

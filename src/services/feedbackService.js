@@ -37,6 +37,33 @@ async function readFunctionsHttpErrorBody(error) {
   return null
 }
 
+/** JWT payload `exp` (seconds) → ISO string, nur für Diagnose */
+function accessTokenExpiryIso(token) {
+  try {
+    const p = String(token || '').split('.')[1]
+    if (!p) return null
+    const b = p.replace(/-/g, '+').replace(/_/g, '/')
+    const pad = b.length % 4 === 0 ? '' : '='.repeat(4 - (b.length % 4))
+    const json = JSON.parse(atob(b + pad))
+    return json?.exp ? new Date(json.exp * 1000).toISOString() : null
+  } catch (_e) {
+    return null
+  }
+}
+
+/**
+ * Frischer Access-Token für Edge Functions (Gateway prüft JWT; abgelaufene Tokens → "Invalid JWT").
+ */
+async function getRefreshedAccessToken(sb) {
+  const { data: refreshData, error: refreshErr } = await sb.auth.refreshSession()
+  const session = refreshData?.session || (await sb.auth.getSession()).data?.session
+  const token = String(session?.access_token || '')
+  if (!token || token.split('.').length !== 3) {
+    return { token: null, error: refreshErr?.message || 'Kein Access-Token.' }
+  }
+  return { token, error: null }
+}
+
 /** Laufzeit-Snapshot für das Feedback-Formular (Debug / Support). */
 export async function collectFeedbackDiagnostics(appUser) {
   const urlSet = Boolean(String(import.meta.env.VITE_SUPABASE_URL || '').trim())
@@ -45,13 +72,14 @@ export async function collectFeedbackDiagnostics(appUser) {
   let sessionUserId = null
   let hasJwt = false
   let sessionError = null
+  let sessionToken = ''
   if (sb) {
     const { data, error } = await sb.auth.getSession()
     sessionError = error?.message || null
     sessionUserId = data?.session?.user?.id ?? null
-    const t = String(data?.session?.access_token || '')
+    sessionToken = String(data?.session?.access_token || '')
     const anon = String(import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim()
-    hasJwt = Boolean(t && t.split('.').length === 3 && t !== anon)
+    hasJwt = Boolean(sessionToken && sessionToken.split('.').length === 3 && sessionToken !== anon)
   }
   const aid = appUser?.id != null ? String(appUser.id) : ''
   return {
@@ -66,6 +94,7 @@ export async function collectFeedbackDiagnostics(appUser) {
     hasUserAccessToken: hasJwt,
     sessionError,
     feedbackSubmitUrl: getFunctionUrl('feedback-submit') || null,
+    accessTokenExpiresAt: sessionToken ? accessTokenExpiryIso(sessionToken) : null,
   }
 }
 
@@ -101,13 +130,28 @@ export async function submitFeedback({ title, body, category, attachmentPaths = 
   if (!sb) {
     return { ok: false, message: 'Supabase nicht konfiguriert.', details: { reason: 'no_client' } }
   }
+  const anon = String(import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim()
+  const { token, error: tokenErr } = await getRefreshedAccessToken(sb)
+  if (!token) {
+    return {
+      ok: false,
+      message: 'Sitzung ungültig oder abgelaufen. Bitte neu anmelden.',
+      details: { reason: 'no_access_token', tokenErr },
+    }
+  }
   const payload = {
     title: String(title || '').trim(),
     body: String(body || '').trim(),
     category: String(category || 'feedback').trim(),
     attachmentPaths,
   }
-  const { data, error } = await sb.functions.invoke('feedback-submit', { body: payload })
+  const { data, error } = await sb.functions.invoke('feedback-submit', {
+    body: payload,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...(anon ? { apikey: anon } : {}),
+    },
+  })
   if (error) {
     const errJson = await readFunctionsHttpErrorBody(error)
     const status = error?.context?.status
@@ -151,9 +195,8 @@ async function buildAuthHeaders() {
   const sb = getSupabaseClient()
   const anon = String(import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim()
   if (!sb || !anon) return { 'Content-Type': 'application/json', ...anonHeaders() }
-  const { data: { session } } = await sb.auth.getSession()
-  const token = String(session?.access_token || '')
-  if (!token || token.split('.').length !== 3) {
+  const { token } = await getRefreshedAccessToken(sb)
+  if (!token) {
     return { 'Content-Type': 'application/json', ...anonHeaders() }
   }
   return {
