@@ -2,11 +2,11 @@ import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import {
   Save, Settings as SettingsIcon, Check, RotateCcw, Shield, Download, Trash2,
-  MessageSquarePlus, Paperclip, Loader2,
+  MessageSquarePlus, Paperclip, Loader2, Bug,
 } from 'lucide-react'
 import { exportUserDataBundle } from '../services/profileService'
 import { requestSupabaseDsarDelete, requestSupabaseDsarExport } from '../services/dsarService'
-import { uploadFeedbackFiles, submitFeedback } from '../services/feedbackService'
+import { uploadFeedbackFiles, submitFeedback, collectFeedbackDiagnostics } from '../services/feedbackService'
 import { getSupabaseClient, isUuid } from '../lib/supabaseClient'
 
 export default function Settings() {
@@ -26,8 +26,28 @@ export default function Settings() {
   const [fileInputKey, setFileInputKey] = useState(0)
   const [feedbackSending, setFeedbackSending] = useState(false)
   const [feedbackBanner, setFeedbackBanner] = useState('')
+  const [feedbackDiag, setFeedbackDiag] = useState(null)
+  const [feedbackDiagLoading, setFeedbackDiagLoading] = useState(false)
+  const [feedbackLog, setFeedbackLog] = useState([])
 
   const feedbackAvailable = Boolean(user && isUuid(user.id) && getSupabaseClient())
+
+  const appendFeedbackLog = (title, detail) => {
+    const time = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    const body = detail === undefined ? '' : typeof detail === 'string' ? detail : JSON.stringify(detail, null, 2)
+    setFeedbackLog((prev) => [...prev.slice(-35), `${time} — ${title}${body ? `\n${body}` : ''}`])
+  }
+
+  const refreshFeedbackDiag = async () => {
+    setFeedbackDiagLoading(true)
+    try {
+      const d = await collectFeedbackDiagnostics(user)
+      setFeedbackDiag(d)
+      appendFeedbackLog('Diagnose geladen', d)
+    } finally {
+      setFeedbackDiagLoading(false)
+    }
+  }
 
   const saveSettings = async () => {
     const nextBlocks = String(textBlocks || '')
@@ -88,15 +108,44 @@ export default function Settings() {
 
   const sendFeedback = async () => {
     setFeedbackBanner('')
+    appendFeedbackLog('Absenden geklickt', {
+      feedbackAvailable,
+      userId: user?.id ?? null,
+      titleLen: feedbackTitle.trim().length,
+      bodyLen: feedbackBody.trim().length,
+      fileCount: feedbackFiles?.length ?? 0,
+    })
+
     if (!feedbackAvailable) {
-      setFeedbackBanner('Bugreports und Feedback mit Anhängen sind nur mit einem registrierten Supabase-Konto (E-Mail-Login) möglich.')
-      setTimeout(() => setFeedbackBanner(''), 5000)
+      const d = await collectFeedbackDiagnostics(user)
+      appendFeedbackLog('Abgebrochen: Anforderungen nicht erfüllt', d)
+      setFeedbackBanner(
+        'Hierfür brauchst du ein registriertes Konto per E-Mail (Supabase): App-User-ID muss eine UUID sein und Supabase muss erreichbar sein. Öffne „Feedback-Diagnose“ unten für Details.',
+      )
+      setTimeout(() => setFeedbackBanner(''), 12000)
       return
     }
+
+    const titleT = feedbackTitle.trim()
+    const bodyT = feedbackBody.trim()
+    if (titleT.length < 2) {
+      appendFeedbackLog('Validierung fehlgeschlagen', { feld: 'Titel', min: 2, aktuell: titleT.length })
+      setFeedbackBanner('Bitte einen Titel mit mindestens 2 Zeichen eingeben.')
+      setTimeout(() => setFeedbackBanner(''), 8000)
+      return
+    }
+    if (bodyT.length < 10) {
+      appendFeedbackLog('Validierung fehlgeschlagen', { feld: 'Beschreibung', min: 10, aktuell: bodyT.length })
+      setFeedbackBanner('Bitte eine Beschreibung mit mindestens 10 Zeichen (Server-Vorgabe).')
+      setTimeout(() => setFeedbackBanner(''), 8000)
+      return
+    }
+
     setFeedbackSending(true)
     let banner = ''
     try {
       const upload = await uploadFeedbackFiles(user.id, feedbackFiles)
+      appendFeedbackLog('Storage-Upload', { ok: upload.ok, pathCount: upload.paths?.length ?? 0, message: upload.message })
       if (!upload.ok) {
         banner = upload.message || 'Upload fehlgeschlagen.'
       } else {
@@ -105,6 +154,11 @@ export default function Settings() {
           body: feedbackBody,
           category: feedbackCategory,
           attachmentPaths: upload.paths,
+        })
+        appendFeedbackLog('Edge Function feedback-submit', {
+          ok: sub.ok,
+          message: sub.message,
+          details: sub.details,
         })
         if (sub.ok) {
           setFeedbackTitle('')
@@ -117,12 +171,13 @@ export default function Settings() {
         }
       }
     } catch (err) {
+      appendFeedbackLog('Unbehandelte Exception', { name: err?.name, message: err?.message })
       banner = String(err?.message || err || 'Unerwarteter Fehler.')
     } finally {
       setFeedbackSending(false)
       if (banner) {
         setFeedbackBanner(banner)
-        setTimeout(() => setFeedbackBanner(''), 6000)
+        setTimeout(() => setFeedbackBanner(''), 8000)
       }
     }
   }
@@ -216,7 +271,7 @@ export default function Settings() {
               value={feedbackCategory}
               onChange={(e) => setFeedbackCategory(e.target.value)}
               className="input-field"
-              disabled={!feedbackAvailable || feedbackSending}
+              disabled={feedbackSending}
             >
               <option value="bug">Fehler / Bug</option>
               <option value="feedback">Feedback</option>
@@ -232,7 +287,7 @@ export default function Settings() {
               className="input-field"
               placeholder="Kurz beschreiben, worum es geht"
               maxLength={200}
-              disabled={!feedbackAvailable || feedbackSending}
+              disabled={feedbackSending}
             />
           </label>
         </div>
@@ -243,7 +298,7 @@ export default function Settings() {
             onChange={(e) => setFeedbackBody(e.target.value)}
             className="input-field min-h-[160px] resize-y"
             placeholder="Was ist passiert? Was hast du erwartet? Schritte zur Reproduktion …"
-            disabled={!feedbackAvailable || feedbackSending}
+            disabled={feedbackSending}
           />
         </label>
         <label className="flex flex-col gap-2 text-sm text-surface-700">
@@ -258,7 +313,7 @@ export default function Settings() {
             multiple
             className="text-sm text-surface-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-primary-50 file:text-primary-800"
             onChange={(e) => setFeedbackFiles(e.target.files)}
-            disabled={!feedbackAvailable || feedbackSending}
+            disabled={feedbackSending}
           />
         </label>
         <div className="flex justify-end">
@@ -266,12 +321,71 @@ export default function Settings() {
             type="button"
             onClick={sendFeedback}
             className="btn-primary"
-            disabled={!feedbackAvailable || feedbackSending}
+            disabled={feedbackSending}
           >
             {feedbackSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageSquarePlus className="w-4 h-4" />}
             Absenden
           </button>
         </div>
+
+        <details
+          className="rounded-xl border border-surface-200 bg-surface-50/90 p-3 text-sm"
+          onToggle={(e) => {
+            if (e.target.open && feedbackDiag === null && !feedbackDiagLoading) {
+              void refreshFeedbackDiag()
+            }
+          }}
+        >
+          <summary className="cursor-pointer font-medium text-surface-800 flex items-center gap-2 select-none list-none [&::-webkit-details-marker]:hidden">
+            <Bug className="w-4 h-4 text-amber-600 shrink-0" />
+            Feedback-Diagnose (Debug)
+          </summary>
+          <div className="mt-3 space-y-3">
+            <p className="text-xs text-surface-500 leading-relaxed">
+              Umgebungsvariablen, Supabase-Session und Ablauf beim Klick auf Absenden. Text kopieren und bei Support mitschicken.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="btn-secondary text-xs !py-1.5 !px-3 inline-flex items-center gap-1.5"
+                onClick={() => void refreshFeedbackDiag()}
+                disabled={feedbackDiagLoading}
+              >
+                {feedbackDiagLoading ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+                    Lädt…
+                  </>
+                ) : (
+                  'Diagnose aktualisieren'
+                )}
+              </button>
+              <button
+                type="button"
+                className="btn-secondary text-xs !py-1.5 !px-3"
+                onClick={() => {
+                  const text = JSON.stringify({ diag: feedbackDiag, log: feedbackLog }, null, 2)
+                  void navigator.clipboard?.writeText(text).then(() => appendFeedbackLog('Diagnose + Log in Zwischenablage kopiert', {}))
+                }}
+              >
+                Alles kopieren
+              </button>
+              <button type="button" className="btn-secondary text-xs !py-1.5 !px-3" onClick={() => setFeedbackLog([])}>
+                Log leeren
+              </button>
+            </div>
+            {feedbackDiag && (
+              <pre className="text-xs bg-slate-900 text-emerald-100/95 p-3 rounded-lg overflow-x-auto max-h-44 overflow-y-auto whitespace-pre-wrap break-all">
+                {JSON.stringify(feedbackDiag, null, 2)}
+              </pre>
+            )}
+            {feedbackLog.length > 0 && (
+              <pre className="text-xs bg-slate-800 text-slate-100 p-3 rounded-lg overflow-x-auto max-h-52 overflow-y-auto whitespace-pre-wrap break-all">
+                {feedbackLog.join('\n\n— — —\n\n')}
+              </pre>
+            )}
+          </div>
+        </details>
       </div>
 
       <div className="card p-6 space-y-3">

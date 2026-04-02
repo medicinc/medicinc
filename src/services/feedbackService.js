@@ -1,4 +1,4 @@
-import { getSupabaseClient } from '../lib/supabaseClient'
+import { getSupabaseClient, isUuid } from '../lib/supabaseClient'
 
 export const FEEDBACK_BUCKET = 'feedback-attachments'
 const MAX_FILES = 6
@@ -22,6 +22,50 @@ function anonHeaders() {
     'Content-Type': 'application/json',
     apikey: anon,
     Authorization: `Bearer ${anon}`,
+  }
+}
+
+async function readFunctionsHttpErrorBody(error) {
+  try {
+    const ctx = error?.context
+    if (ctx && typeof ctx.json === 'function') {
+      return await ctx.json()
+    }
+  } catch (_e) {
+    /* ignore */
+  }
+  return null
+}
+
+/** Laufzeit-Snapshot für das Feedback-Formular (Debug / Support). */
+export async function collectFeedbackDiagnostics(appUser) {
+  const urlSet = Boolean(String(import.meta.env.VITE_SUPABASE_URL || '').trim())
+  const anonSet = Boolean(String(import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim())
+  const sb = getSupabaseClient()
+  let sessionUserId = null
+  let hasJwt = false
+  let sessionError = null
+  if (sb) {
+    const { data, error } = await sb.auth.getSession()
+    sessionError = error?.message || null
+    sessionUserId = data?.session?.user?.id ?? null
+    const t = String(data?.session?.access_token || '')
+    const anon = String(import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim()
+    hasJwt = Boolean(t && t.split('.').length === 3 && t !== anon)
+  }
+  const aid = appUser?.id != null ? String(appUser.id) : ''
+  return {
+    envSupabaseUrlSet: urlSet,
+    envAnonKeySet: anonSet,
+    supabaseClientReady: Boolean(sb),
+    appUserId: aid || null,
+    appUserIdLooksLikeUuid: aid ? isUuid(aid) : false,
+    authSessionUserId: sessionUserId,
+    sessionMatchesAppUser:
+      aid && sessionUserId ? aid === String(sessionUserId) : aid || sessionUserId ? false : null,
+    hasUserAccessToken: hasJwt,
+    sessionError,
+    feedbackSubmitUrl: getFunctionUrl('feedback-submit') || null,
   }
 }
 
@@ -54,7 +98,9 @@ export async function uploadFeedbackFiles(userId, fileList) {
 
 export async function submitFeedback({ title, body, category, attachmentPaths = [] }) {
   const sb = getSupabaseClient()
-  if (!sb) return { ok: false, message: 'Supabase nicht konfiguriert.' }
+  if (!sb) {
+    return { ok: false, message: 'Supabase nicht konfiguriert.', details: { reason: 'no_client' } }
+  }
   const payload = {
     title: String(title || '').trim(),
     body: String(body || '').trim(),
@@ -63,18 +109,42 @@ export async function submitFeedback({ title, body, category, attachmentPaths = 
   }
   const { data, error } = await sb.functions.invoke('feedback-submit', { body: payload })
   if (error) {
+    const errJson = await readFunctionsHttpErrorBody(error)
+    const status = error?.context?.status
+    const fromBody = typeof errJson?.message === 'string' ? errJson.message : null
+    if (fromBody) {
+      return {
+        ok: false,
+        message: fromBody,
+        details: { phase: 'invoke_http_error', status, body: errJson, invokeMessage: error.message },
+      }
+    }
     const fallback = await fetch(getFunctionUrl('feedback-submit'), {
       method: 'POST',
       headers: await buildAuthHeaders(),
       body: JSON.stringify(payload),
     }).catch(() => null)
-    if (!fallback) return { ok: false, message: error.message || 'Senden fehlgeschlagen.' }
+    if (!fallback) {
+      return {
+        ok: false,
+        message: error.message || 'Senden fehlgeschlagen.',
+        details: { phase: 'invoke_error_no_fallback', status, invokeMessage: error.message },
+      }
+    }
     const j = await fallback.json().catch(() => null)
-    if (!fallback.ok) return { ok: false, message: j?.message || 'Senden fehlgeschlagen.' }
-    return { ok: true, message: j?.message || 'Gesendet.' }
+    if (!fallback.ok) {
+      return {
+        ok: false,
+        message: j?.message || `Senden fehlgeschlagen (HTTP ${fallback.status}).`,
+        details: { phase: 'fetch_fallback', status: fallback.status, body: j },
+      }
+    }
+    return { ok: true, message: j?.message || 'Gesendet.', details: { phase: 'fetch_fallback_ok', body: j } }
   }
-  if (data?.message && !data?.ok) return { ok: false, message: data.message }
-  return { ok: true, message: data?.message || 'Gesendet.' }
+  if (data?.message && !data?.ok) {
+    return { ok: false, message: data.message, details: { phase: 'invoke_2xx_error_shape', data } }
+  }
+  return { ok: true, message: data?.message || 'Gesendet.', details: { phase: 'invoke_ok', data } }
 }
 
 async function buildAuthHeaders() {
