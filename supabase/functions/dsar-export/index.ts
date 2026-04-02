@@ -25,11 +25,25 @@ Deno.serve(async (request) => {
   if (body?.userId && String(body.userId) !== String(authData.user.id)) {
     return Response.json({ ok: false, message: 'Ungültige Benutzer-ID.' }, { status: 403, headers: CORS_HEADERS })
   }
+  const uid = authData.user.id
+  const { data: profile, error: profileError } = await sb
+    .from('profiles')
+    .select('id, email, username, game_data, updated_at')
+    .eq('id', uid)
+    .maybeSingle()
+
   return Response.json({
     ok: true,
-    message: 'DSAR export placeholder. Implement real Supabase export pipeline before production.',
-    userId: body?.userId || null,
-    email: body?.email || null,
     generatedAt: new Date().toISOString(),
+    auth: {
+      id: uid,
+      email: authData.user.email || null,
+      created_at: authData.user.created_at || null,
+    },
+    profile: profileError ? { error: profileError.message } : profile,
+    notes: [
+      'Cloud-Daten: Profilzeile aus public.profiles (game_data kann groß sein).',
+      'Vollständiger DSAR-Umfang (Krankenhaus, Chat, etc.) kann später ergänzt werden.',
+    ],
   }, { headers: CORS_HEADERS })
 })

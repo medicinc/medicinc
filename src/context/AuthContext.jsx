@@ -592,6 +592,19 @@ export function AuthProvider({ children }) {
     if (!user) return false
     await removeHospitalsOwnedByUser(user.id)
     await removeUserLocalData(user)
+    const sb = getSupabaseClient()
+    try {
+      if (sb) await sb.auth.signOut()
+    } catch (_error) {
+      // Continue with local session cleanup.
+    }
+    try {
+      Object.keys(localStorage)
+        .filter((key) => key.startsWith('sb-') && key.endsWith('-auth-token'))
+        .forEach((key) => localStorage.removeItem(key))
+    } catch (_storageError) {
+      // Ignore storage access issues.
+    }
     setUser(null)
     return true
   }, [user])

@@ -27,7 +27,9 @@ Deno.serve(async (request) => {
   }
   return Response.json({
     ok: true,
-    message: 'DSAR delete placeholder. Implement real Supabase deletion workflow before production.',
+    serverDeletionImplemented: false,
+    message:
+      'DSAR delete placeholder: Lokallogik und Session können in der App entfernt werden; vollständiges Löschen von Auth- und Tabellendaten in Supabase ist noch nicht implementiert.',
     userId: body?.userId || null,
     email: body?.email || null,
     queuedAt: new Date().toISOString(),

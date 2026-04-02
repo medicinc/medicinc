@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { submitWaitlistEntry } from '../services/waitlistService'
 import {
   Activity, Stethoscope, Brain, Heart, Building2, Users,
   Zap, Shield, ArrowRight, Star, ChevronRight, Trophy,
-  Microscope, Syringe, Monitor, TrendingUp, X, Mail, UserRound, CheckCircle2, CalendarDays, Wrench, Rocket, Flag
+  Microscope, Syringe, Monitor, TrendingUp, X, Mail, UserRound, CheckCircle2, CalendarDays, Wrench, Rocket, Flag,
+  MessageSquare, Sparkles, Lock,
 } from 'lucide-react'
 
 const features = [
@@ -60,7 +61,27 @@ const specialties = [
   { name: 'Chirurgie', icon: Monitor, cases: 64, color: 'bg-blue-50 text-blue-600' },
 ]
 
+const LANDING_META_DESC =
+  'Medic Inc: Medizinische Simulation mit KI-gestütztem Patienten- und Team-Chat, Krankenhaus-Management und Rettungsdienst. Alpha-Warteliste, realistische Fälle, Multiplayer. Kein Echtbetrieb – Lern- und Trainingssimulation.'
+
 export default function Landing() {
+  useEffect(() => {
+    const prevTitle = document.title
+    document.title = 'Medic Inc – Medizinische Simulation mit KI-Chat & Multiplayer | Alpha'
+    let meta = document.querySelector('meta[name="description"]')
+    if (!meta) {
+      meta = document.createElement('meta')
+      meta.setAttribute('name', 'description')
+      document.head.appendChild(meta)
+    }
+    const prevDesc = meta.getAttribute('content') || ''
+    meta.setAttribute('content', LANDING_META_DESC)
+    return () => {
+      document.title = prevTitle
+      meta.setAttribute('content', prevDesc)
+    }
+  }, [])
+
   const [waitlistOpen, setWaitlistOpen] = useState(false)
   const [waitlistDone, setWaitlistDone] = useState(false)
   const [waitlistForm, setWaitlistForm] = useState({
@@ -329,6 +350,79 @@ export default function Landing() {
                 <p className="text-surface-500 leading-relaxed">{feature.description}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section
+        className="py-24 bg-gradient-to-b from-violet-50/80 via-white to-slate-50 border-y border-violet-100/80"
+        aria-labelledby="ai-chat-heading"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-14 lg:gap-20 items-center">
+            <div>
+              <p className="text-sm font-semibold text-violet-600 uppercase tracking-wider mb-3">
+                KI-Simulationsdialoge
+              </p>
+              <h2 id="ai-chat-heading" className="font-display text-4xl sm:text-5xl font-bold text-surface-900 leading-tight">
+                Sprich mit virtuellen Patient*innen – per KI-gestütztem Chat
+              </h2>
+              <p className="mt-5 text-lg text-surface-600 leading-relaxed">
+                Medic Inc bietet einen <strong className="font-semibold text-surface-800">KI-Patientenchat</strong> und
+                kontextbezogene Dialoge in der Simulation: Anamnese üben, Rückfragen stellen, Kommunikation unter Zeitdruck
+                trainieren – nahe am klinischen Gespräch, aber klar als <strong className="font-semibold text-surface-800">Simulation</strong> gekennzeichnet.
+                Ideal für Medizinstudium, Notfalltraining und Teamübungen – ein Feature, das klassische Fall-Simulatoren selten bieten.
+              </p>
+              <ul className="mt-6 space-y-3 text-surface-600">
+                <li className="flex gap-3">
+                  <MessageSquare className="w-5 h-5 text-violet-600 shrink-0 mt-0.5" aria-hidden />
+                  <span><strong className="text-surface-800">Dynamische Antworten</strong> statt starrer Textbäume – der Dialog passt sich deinen Fragen an.</span>
+                </li>
+                <li className="flex gap-3">
+                  <Lock className="w-5 h-5 text-violet-600 shrink-0 mt-0.5" aria-hidden />
+                  <span><strong className="text-surface-800">Serverseitige Verarbeitung</strong> – keine Rohdaten im Klartext an den Browser; Hinweise in den <Link to="/ai-hinweise" className="text-violet-700 font-medium underline underline-offset-2">AI-Hinweisen</Link>.</span>
+                </li>
+                <li className="flex gap-3">
+                  <Sparkles className="w-5 h-5 text-violet-600 shrink-0 mt-0.5" aria-hidden />
+                  <span><strong className="text-surface-800">Lernfokus</strong> – Übung für Gesprächsführung und Dokumentation; keine medizinische Einzelfallberatung.</span>
+                </li>
+              </ul>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <button type="button" onClick={() => setWaitlistOpen(true)} className="btn-primary !inline-flex">
+                  Für Alpha vormerken <ArrowRight className="w-4 h-4" />
+                </button>
+                <Link to="/ai-hinweise" className="btn-secondary !inline-flex">
+                  Mehr zu KI &amp; Datenschutz
+                </Link>
+              </div>
+            </div>
+            <div className="relative">
+              <div className="absolute -inset-4 bg-gradient-to-br from-violet-200/50 to-primary-200/40 rounded-3xl blur-2xl -z-10" aria-hidden />
+              <article className="card p-6 sm:p-8 border-violet-200/80 shadow-lg shadow-violet-500/10">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-primary-600 flex items-center justify-center">
+                    <Brain className="w-6 h-6 text-white" aria-hidden />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-surface-900">Patient*in (Simulation)</h3>
+                    <p className="text-xs text-violet-600 font-medium">KI-Simulationsdialog</p>
+                  </div>
+                </div>
+                <div className="rounded-xl bg-surface-50 border border-surface-100 p-4 space-y-3 text-sm">
+                  <p className="text-surface-500 text-xs uppercase tracking-wide">Du</p>
+                  <p className="text-surface-800 bg-white rounded-lg px-3 py-2 border border-surface-100">
+                    Seit wann haben Sie die Schmerzen, und strahlen sie aus?
+                  </p>
+                  <p className="text-surface-500 text-xs uppercase tracking-wide">Simulation</p>
+                  <p className="text-surface-800 bg-violet-50/80 rounded-lg px-3 py-2 border border-violet-100">
+                    Seit heute Morgen … es zieht in den linken Arm. Ich hatte schon mal so einen Druck auf der Brust.
+                  </p>
+                </div>
+                <p className="mt-4 text-xs text-surface-500 leading-relaxed">
+                  Beispiel zur Veranschaulichung. Echte Dialoge laufen in der App mit deinen Fällen und Einstellungen.
+                </p>
+              </article>
+            </div>
           </div>
         </div>
       </section>
