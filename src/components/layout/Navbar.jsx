@@ -14,6 +14,7 @@ export default function Navbar() {
   const [showMedicalModal, setShowMedicalModal] = useState(false)
   const [showRescueModal, setShowRescueModal] = useState(false)
   const [unlockError, setUnlockError] = useState('')
+  const [loggingOut, setLoggingOut] = useState(false)
   const { user, isAuthenticated, logout, needsOnboarding, needsHospital, needsRescueStation, updateUser, addMoney } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
@@ -37,9 +38,18 @@ export default function Navbar() {
   const isActive = (path) => location.pathname === path
 
   const handleLogout = async () => {
-    await logout()
-    navigate('/')
-    setProfileOpen(false)
+    if (loggingOut) return
+    setLoggingOut(true)
+    try {
+      await logout()
+    } catch {
+      // local cleanup in context should still run; continue with redirect
+    } finally {
+      navigate('/')
+      setProfileOpen(false)
+      setMobileOpen(false)
+      setLoggingOut(false)
+    }
   }
 
   const handleHospitalNavigation = (e) => {
@@ -178,9 +188,10 @@ export default function Navbar() {
                       <div className="border-t border-surface-100 mt-1 pt-1">
                         <button
                           onClick={handleLogout}
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 w-full transition-colors"
+                          disabled={loggingOut}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 w-full transition-colors disabled:opacity-60"
                         >
-                          <LogOut className="w-4 h-4" /> Abmelden
+                          <LogOut className="w-4 h-4" /> {loggingOut ? 'Abmelden...' : 'Abmelden'}
                         </button>
                       </div>
                     </div>

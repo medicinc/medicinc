@@ -984,7 +984,7 @@ function advanceAlongRoute(current, points, stepDistance) {
 
 export default function Rettungsdienst() {
   const { user, updateUser, addMoney, triggerPolicePenalty, clearLegalState } = useAuth()
-  const canUseDevTools = user?.role === 'admin'
+  const canUseDevTools = !!user
   const { createIvenaPrealertFromRescue, canReceivePatients, hospital } = useHospital()
   const dispatchDueRef = useRef(0)
   const mapScrollRef = useRef(null)
@@ -3800,6 +3800,10 @@ export default function Rettungsdienst() {
                       patient={sceneChatPatient}
                       mode="rd"
                       injectedPatientMessage={scenePainStimulusMessage}
+                      onInjectedMessageConsumed={(messageId) => {
+                        if (!messageId) return
+                        setScenePainStimulusMessage((prev) => (prev?.id === messageId ? null : prev))
+                      }}
                       initialSnapshot={sceneChatSnapshot}
                       onSnapshotChange={(snapshot) => {
                         setSceneChatSnapshot(snapshot)

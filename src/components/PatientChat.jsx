@@ -173,7 +173,15 @@ function TypingIndicator({ avatar }) {
   )
 }
 
-export default function PatientChat({ patient, onComplete, mode = 'triage', initialSnapshot = null, onSnapshotChange = null, injectedPatientMessage = null }) {
+export default function PatientChat({
+  patient,
+  onComplete,
+  mode = 'triage',
+  initialSnapshot = null,
+  onSnapshotChange = null,
+  injectedPatientMessage = null,
+  onInjectedMessageConsumed = null,
+}) {
   const dialogue = useMemo(() => generatePatientDialogue(patient, mode), [patient.id, mode])
   const germanDialogue = useMemo(() => generatePatientDialogue({ ...patient, languageCode: 'de' }, mode), [patient, mode])
   const [messages, setMessages] = useState([])
@@ -191,6 +199,16 @@ export default function PatientChat({ patient, onComplete, mode = 'triage', init
   const isForeignConversation = conversationLang !== 'de'
   const consciousness = String(patient?.clinicalState?.consciousness || '').toLowerCase()
   const patientCanSpeak = !/(bewusstlos|unconscious|nicht ansprechbar|reanimationspflichtig)/i.test(consciousness)
+  const complaintContext = useMemo(() => {
+    const text = String(patient?.chiefComplaint || '').toLowerCase()
+    return {
+      trauma: /sturz|fraktur|schnitt|wunde|trauma|verletz/.test(text),
+      respiratory: /atem|luft|dyspnoe|husten/.test(text),
+      cardiac: /brust|herz|druck|rasen/.test(text),
+      abdominal: /bauch|unterbauch|uebel|übel|erbrechen/.test(text),
+      neuro: /kopf|schwindel|seh|neurolog/.test(text),
+    }
+  }, [patient?.chiefComplaint])
 
   useEffect(() => {
     setTranslatorEnabled(false)
@@ -286,6 +304,7 @@ export default function PatientChat({ patient, onComplete, mode = 'triage', init
         time: new Date(),
       }])
       setAskedIds(new Set())
+      if (typeof onInjectedMessageConsumed === 'function') onInjectedMessageConsumed(injectedMessageId)
       return
     }
     setPainStimulusContext(null)
@@ -349,7 +368,7 @@ export default function PatientChat({ patient, onComplete, mode = 'triage', init
       cancelled = true
       setIsTyping(false)
     }
-  }, [patient.id, mode, initialSnapshot?.patientId, conversationLang, patientCanSpeak, injectedPatientMessage?.id, injectedPatientMessage?.text])
+  }, [patient.id, mode, initialSnapshot?.patientId, conversationLang, patientCanSpeak, injectedPatientMessage?.id, injectedPatientMessage?.text, onInjectedMessageConsumed])
 
   useEffect(() => {
     if (typeof onSnapshotChange !== 'function') return
@@ -373,7 +392,8 @@ export default function PatientChat({ patient, onComplete, mode = 'triage', init
         time: new Date(),
       }]
     })
-  }, [injectedPatientMessage?.id, injectedPatientMessage?.text])
+    if (typeof onInjectedMessageConsumed === 'function') onInjectedMessageConsumed(messageId)
+  }, [injectedPatientMessage?.id, injectedPatientMessage?.text, onInjectedMessageConsumed])
 
   useEffect(() => {
     const el = messagesScrollRef.current
@@ -381,8 +401,8 @@ export default function PatientChat({ patient, onComplete, mode = 'triage', init
     el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
   }, [messages, isTyping])
 
-  const askFreeQuestion = async () => {
-    const text = String(freeQuestion || '').trim()
+  const askFreeQuestion = async (forcedText = '') => {
+    const text = String(forcedText || freeQuestion || '').trim()
     if (!text || isTyping) return
     if (!patientCanSpeak) {
       setChatNotice({ type: 'warn', text: 'Patient*in ist bewusstlos und kann aktuell nicht antworten.' })
@@ -414,12 +434,12 @@ export default function PatientChat({ patient, onComplete, mode = 'triage', init
       if (hasAny(['gespuert', 'gespürt', 'gemerkt', 'wahrgenommen', 'reaktion'])) {
         if (painStimulusContext.reducedResponse) {
           return {
-            text: 'Ja... habe ich gespürt. Es war unangenehm. Meine Beschwerden sind aber weiterhin da.',
+            text: 'Ja... ich habe das gespürt. Es war kurz unangenehm, die eigentlichen Beschwerden sind aber weiterhin da.',
             explained: painStimulusDialogue.explained,
           }
         }
         return {
-          text: 'Ja, habe ich gespürt. Es hat kurz gestochen. Meine eigentlichen Beschwerden sind aber noch da.',
+          text: 'Ja, ich habe es deutlich gemerkt. Es hat kurz gestochen, aber mein Hauptproblem ist noch da.',
           explained: painStimulusDialogue.explained,
         }
       }
@@ -427,18 +447,18 @@ export default function PatientChat({ patient, onComplete, mode = 'triage', init
         if (painStimulusDialogue.explained) {
           return {
             text: painStimulusContext.reducedResponse
-              ? 'Ja... verstanden. Danke, dass Sie es nochmal erklärt haben.'
-              : 'Alles klar, verstanden. Danke für die Erklärung.',
+              ? 'Okay... verstanden. Danke für die kurze Erklärung.'
+              : 'Alles klar, danke für die Erklärung.',
             explained: true,
           }
         }
         if (painStimulusContext.reducedResponse) {
-          return { text: 'Okay... verstanden. Mir war nur nicht klar, was Sie da machen.', explained: true }
+          return { text: 'Okay... verstanden. Ich war nur kurz irritiert, weil ich nicht wusste, was Sie testen.', explained: true }
         }
         const responses = [
-          'Okay, verstanden. Danke, dass Sie es erklärt haben.',
-          'Alles klar, wenn das ein Test war, ist es in Ordnung.',
-          'Verstanden. Bitte sagen Sie kurz Bescheid, bevor Sie so etwas machen.',
+          'Okay, verstanden. Danke fürs Erklären.',
+          'Alles klar, wenn das ein Test war, passt das.',
+          'Verstanden. Sagen Sie bitte kurz Bescheid, bevor Sie so etwas machen.',
         ]
         return { text: responses[Math.floor(Math.random() * responses.length)], explained: true }
       }
@@ -446,7 +466,7 @@ export default function PatientChat({ patient, onComplete, mode = 'triage', init
         return {
           text: painStimulusContext.reducedResponse
             ? 'Schon gut... ich war nur erschrocken.'
-            : 'Ist okay, ich war nur kurz erschrocken.',
+            : 'Ist schon okay, ich war nur kurz erschrocken.',
           explained: painStimulusDialogue.explained,
         }
       }
@@ -455,14 +475,14 @@ export default function PatientChat({ patient, onComplete, mode = 'triage', init
           return {
             text: painStimulusContext.reducedResponse
               ? 'Okay... ich habe es verstanden, danke.'
-              : 'Verstanden, danke. Bitte sagen Sie mir sowas nur kurz vorher.',
+              : 'Verstanden, danke. Bitte sagen Sie so etwas kurz vorher.',
             explained: true,
           }
         }
         return {
           text: painStimulusContext.reducedResponse
-            ? 'Ich wollte nur wissen, was das war.'
-            : 'Ich wollte nur verstehen, warum Sie mir wehgetan haben.',
+            ? 'Ich wollte nur wissen, was das gerade war.'
+            : 'Ich wollte nur wissen, warum das gerade gemacht wurde.',
           explained: false,
         }
       }
@@ -548,6 +568,70 @@ export default function PatientChat({ patient, onComplete, mode = 'triage', init
     if (!askedIds.has('pain')) return null
     return extractPainNrsFromMessages(messages, dialogue.painLevel)
   }, [askedIds, messages, dialogue.painLevel])
+
+  const quickTemplates = useMemo(() => {
+    const core = [
+      'Was führt Sie heute zu uns?',
+      'Können Sie die Beschwerden genauer beschreiben?',
+      'Seit wann bestehen die Beschwerden?',
+      'Wie stark sind die Schmerzen auf einer Skala von 0 bis 10?',
+      'Gibt es Auslöser oder wird es bei etwas schlimmer/besser?',
+      'Haben Sie Allergien gegen Medikamente oder andere Stoffe?',
+      'Nehmen Sie regelmäßig Medikamente ein?',
+      'Haben Sie relevante Vorerkrankungen?',
+      'Wann haben Sie zuletzt gegessen oder getrunken?',
+      'Gab es ähnliche Beschwerden schon einmal?',
+      'Gibt es noch etwas Wichtiges, das ich wissen sollte?',
+    ]
+    const trauma = [
+      'Gab es einen Sturz, Unfall oder direkten Aufprall?',
+      'Wo genau tut es am meisten weh?',
+      'Können Sie die betroffene Stelle bewegen und belasten?',
+      'Haben Sie Taubheit, Kribbeln oder Kraftverlust bemerkt?',
+    ]
+    const resp = [
+      'Fällt Ihnen das Atmen in Ruhe schwer oder nur bei Belastung?',
+      'Haben Sie Husten, Auswurf oder pfeifende Atmung?',
+      'Wird die Luftnot beim Liegen schlechter?',
+    ]
+    const cardiac = [
+      'Strahlen die Beschwerden in Arm, Rücken oder Kiefer aus?',
+      'Gab es Druck auf der Brust, Herzrasen oder Kaltschweißigkeit?',
+      'Wird es in Ruhe besser oder bleibt es gleich?',
+    ]
+    const abdominal = [
+      'Wo im Bauch sitzen die Schmerzen genau?',
+      'Gab es Übelkeit, Erbrechen oder Veränderungen beim Stuhlgang?',
+      'Haben Sie Fieber oder Schüttelfrost bemerkt?',
+    ]
+    const neuro = [
+      'Gab es Schwindel, Sehstörungen oder Sprachprobleme?',
+      'Hatten Sie plötzlich starke Kopfschmerzen?',
+      'Gab es Lähmungen oder Taubheitsgefühle?',
+    ]
+    const ward = [
+      'Wie geht es Ihnen seit der letzten Behandlung insgesamt?',
+      'Sind neue Beschwerden hinzugekommen?',
+      'Hat die Medikation bisher geholfen?',
+      'Konnten Sie essen, trinken und schlafen?',
+    ]
+    const rd = [
+      'Können Sie mir kurz schildern, was genau passiert ist?',
+      'Waren Sie zwischenzeitlich bewusstlos?',
+      'Sind Blutverdünner oder Vorerkrankungen bekannt?',
+      'Wo ist aktuell das dringendste Problem?',
+    ]
+    const conditionals = [
+      ...(complaintContext.trauma ? trauma : []),
+      ...(complaintContext.respiratory ? resp : []),
+      ...(complaintContext.cardiac ? cardiac : []),
+      ...(complaintContext.abdominal ? abdominal : []),
+      ...(complaintContext.neuro ? neuro : []),
+      ...(mode === 'ward' ? ward : []),
+      ...(mode === 'rd' ? rd : []),
+    ]
+    return [...core, ...conditionals].slice(0, 22)
+  }, [complaintContext, mode])
 
   const collectedData = {
     painLevel: discoveredPain,
@@ -674,7 +758,22 @@ export default function PatientChat({ patient, onComplete, mode = 'triage', init
             {chatNotice.text}
           </div>
         )}
-        <div className="px-6 pb-3 pt-2 border-t border-surface-100 shrink-0">
+        <div className="px-6 pt-2 shrink-0">
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {quickTemplates.map((template) => (
+              <button
+                key={template}
+                onClick={() => askFreeQuestion(template)}
+                disabled={isTyping || !patientCanSpeak}
+                className="shrink-0 rounded-full border border-surface-200 bg-surface-50 px-3 py-1.5 text-xs text-surface-700 hover:bg-surface-100 disabled:opacity-50"
+                title={template}
+              >
+                {template}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="px-6 pb-3 pt-1 border-t border-surface-100 shrink-0">
           <div className="flex gap-2">
             <input
               value={freeQuestion}

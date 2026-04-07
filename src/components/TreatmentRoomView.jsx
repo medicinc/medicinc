@@ -467,6 +467,10 @@ export default function TreatmentRoomView({
   }, [patient])
 
   useEffect(() => {
+    setPainStimulusMessage(null)
+  }, [patient?.id])
+
+  useEffect(() => {
     if (!patient?.clinicalState?.resuscitation?.cprActive) return
     const timer = setInterval(() => setCprPulsePhase(prev => !prev), 500)
     return () => clearInterval(timer)
@@ -763,7 +767,7 @@ export default function TreatmentRoomView({
               <div className="px-5 py-3 border-b border-surface-200 flex items-center gap-3 shrink-0">
                 <div className="w-9 h-9 rounded-xl bg-primary-100 text-primary-600 flex items-center justify-center"><MessageCircle className="w-5 h-5" /></div>
                 <div className="flex-1"><h3 className="font-bold text-surface-900 text-sm">Patientengespräch</h3><p className="text-xs text-surface-500">{patient?.name || 'Kein Patient'}</p></div>
-                <button onClick={() => setShowChatPanel(false)} className="p-1.5 hover:bg-surface-100 rounded-lg"><X className="w-4 h-4 text-surface-400" /></button>
+                <button onClick={() => { setShowChatPanel(false); setPainStimulusMessage(null) }} className="p-1.5 hover:bg-surface-100 rounded-lg"><X className="w-4 h-4 text-surface-400" /></button>
               </div>
               <div className="flex-1 min-h-0">
                 {patient ? (
@@ -773,6 +777,10 @@ export default function TreatmentRoomView({
                     initialSnapshot={patient?.chatSnapshot || null}
                     onSnapshotChange={(snapshot) => onPatientChatSnapshotChange?.(patient?.id, snapshot)}
                     injectedPatientMessage={painStimulusMessage}
+                    onInjectedMessageConsumed={(messageId) => {
+                      if (!messageId) return
+                      setPainStimulusMessage((prev) => (prev?.id === messageId ? null : prev))
+                    }}
                   />
                 ) : (
                   <div className="h-full flex items-center justify-center text-sm text-surface-400">Kein Patient im Zimmer</div>
@@ -1009,7 +1017,7 @@ export default function TreatmentRoomView({
                   </button>
                 )}
                 {patient && (
-                  <button onClick={() => { setShowMedPanel(false); setActiveEquipment(null); setShowChatPanel(true) }} disabled={!canTreatPatient}
+                  <button onClick={() => { setPainStimulusMessage(null); setShowMedPanel(false); setActiveEquipment(null); setShowChatPanel(true) }} disabled={!canTreatPatient}
                     className="w-full flex items-center gap-3 p-2.5 rounded-xl border-2 border-primary-200 bg-primary-50 hover:bg-primary-100 text-primary-700 transition-colors text-left disabled:opacity-50 disabled:cursor-not-allowed">
                     <MessageCircle className="w-4 h-4" /><span className="text-sm font-medium">Mit Patient sprechen</span>
                   </button>

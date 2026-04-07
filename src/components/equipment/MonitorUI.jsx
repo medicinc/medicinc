@@ -10,7 +10,7 @@ import { ECG_SEGMENT, generateEcgPath, generateFlatline, generateVfPath } from '
 
 export default function MonitorUI({ equipment, patient, onAction, savedState, onSaveState, externalAudioManaged = false }) {
   const { user } = useAuth()
-  const canUseDebugTools = user?.role === 'admin'
+  const canUseDebugTools = !!user
   const [powered, setPowered] = useState(savedState?.powered ?? false)
   const [spo2Connected, setSpo2Connected] = useState(savedState?.spo2Connected ?? false)
   const [ecgConnected, setEcgConnected] = useState(savedState?.ecgConnected ?? false)

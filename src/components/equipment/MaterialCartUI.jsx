@@ -398,7 +398,7 @@ export default function MaterialCartUI({ patient, onAction, savedState, onSaveSt
   const [accessAttachedToolId, setAccessAttachedToolId] = useState(null)
   const [accessCursorPos, setAccessCursorPos] = useState({ x: 0, y: 0 })
   const [accessHint, setAccessHint] = useState('')
-  const canUseDebugTools = currentUser?.role === 'admin'
+  const canUseDebugTools = !!currentUser
 
   const selectedAccessType = useMemo(
     () => ACCESS_TYPES.find(type => type.id === accessDraft.typeId) || ACCESS_TYPES[2],

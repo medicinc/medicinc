@@ -92,6 +92,7 @@ const PASS_META = {
 
 export default function Shop() {
   const { user, addMoney, updateUser } = useAuth()
+  const shopClosedForAlpha = true
   const [couponCode, setCouponCode] = useState('')
   const [couponResult, setCouponResult] = useState(null)
   const [purchaseResult, setPurchaseResult] = useState(null)
@@ -206,7 +207,7 @@ export default function Shop() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="font-display text-3xl font-bold text-surface-900">Shop</h1>
@@ -220,61 +221,61 @@ export default function Shop() {
           </div>
         </div>
       </div>
+      <div className={shopClosedForAlpha ? 'pointer-events-none select-none blur-[2px] opacity-70' : ''}>
+        {/* Purchase result */}
+        {purchaseResult && (
+          <div className={`mb-6 p-4 rounded-xl border flex items-center gap-3 ${
+            purchaseResult.success ? 'bg-accent-50 border-accent-200' : 'bg-amber-50 border-amber-200'
+          }`}>
+            <AlertCircle className={`w-5 h-5 shrink-0 ${purchaseResult.success ? 'text-accent-600' : 'text-amber-600'}`} />
+            <p className={`text-sm ${purchaseResult.success ? 'text-accent-700' : 'text-amber-700'}`}>{purchaseResult.message}</p>
+          </div>
+        )}
 
-      {/* Purchase result */}
-      {purchaseResult && (
-        <div className={`mb-6 p-4 rounded-xl border flex items-center gap-3 ${
-          purchaseResult.success ? 'bg-accent-50 border-accent-200' : 'bg-amber-50 border-amber-200'
-        }`}>
-          <AlertCircle className={`w-5 h-5 shrink-0 ${purchaseResult.success ? 'text-accent-600' : 'text-amber-600'}`} />
-          <p className={`text-sm ${purchaseResult.success ? 'text-accent-700' : 'text-amber-700'}`}>{purchaseResult.message}</p>
-        </div>
-      )}
-
-      {/* Currency Packages */}
-      <h2 className="text-xl font-semibold text-surface-900 mb-4 flex items-center gap-2">
-        <Sparkles className="w-5 h-5 text-amber-500" /> Spielgeld-Pakete
-      </h2>
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
-        {CURRENCY_PACKAGES.map(pkg => {
-          const Icon = pkg.icon
-          return (
-            <div key={pkg.id} className="card overflow-hidden">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${pkg.color} flex items-center justify-center`}>
-                    <Icon className="w-6 h-6 text-white" />
+        {/* Currency Packages */}
+        <h2 className="text-xl font-semibold text-surface-900 mb-4 flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-amber-500" /> Spielgeld-Pakete
+        </h2>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
+          {CURRENCY_PACKAGES.map(pkg => {
+            const Icon = pkg.icon
+            return (
+              <div key={pkg.id} className="card overflow-hidden">
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${pkg.color} flex items-center justify-center`}>
+                      <Icon className="w-6 h-6 text-white" />
+                    </div>
+                    {pkg.bonus && (
+                      <span className="text-xs font-semibold text-accent-600 bg-accent-50 px-2 py-1 rounded-full">{pkg.bonus}</span>
+                    )}
                   </div>
-                  {pkg.bonus && (
-                    <span className="text-xs font-semibold text-accent-600 bg-accent-50 px-2 py-1 rounded-full">{pkg.bonus}</span>
-                  )}
+                  <h3 className="font-semibold text-surface-900 mb-1">{pkg.name}</h3>
+                  <p className="text-2xl font-bold text-surface-900 mb-1">
+                    {pkg.amount.toLocaleString('de-DE')}€
+                    <span className="text-sm font-normal text-surface-500 ml-1">Spielgeld</span>
+                  </p>
+                  <p className="text-lg font-semibold text-primary-600 mb-4">{pkg.price}</p>
+                  <p className="text-xs text-surface-500 mb-4">
+                    Effektiv: {packageUnitInfo[pkg.id]?.per1000 || '0,00'}€ pro 1.000 Spielgeld (inkl. Bonus)
+                  </p>
+                  <button
+                    onClick={() => handlePurchase(pkg)}
+                    className={`w-full py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                      pkg.popular
+                        ? 'bg-primary-600 text-white hover:bg-primary-700'
+                        : 'bg-surface-100 text-surface-700 hover:bg-surface-200'
+                    }`}
+                  >
+                    <span className="flex items-center justify-center gap-2">
+                      <ShoppingCart className="w-4 h-4" /> Kaufen
+                    </span>
+                  </button>
                 </div>
-                <h3 className="font-semibold text-surface-900 mb-1">{pkg.name}</h3>
-                <p className="text-2xl font-bold text-surface-900 mb-1">
-                  {pkg.amount.toLocaleString('de-DE')}€
-                  <span className="text-sm font-normal text-surface-500 ml-1">Spielgeld</span>
-                </p>
-                <p className="text-lg font-semibold text-primary-600 mb-4">{pkg.price}</p>
-                <p className="text-xs text-surface-500 mb-4">
-                  Effektiv: {packageUnitInfo[pkg.id]?.per1000 || '0,00'}€ pro 1.000 Spielgeld (inkl. Bonus)
-                </p>
-                <button
-                  onClick={() => handlePurchase(pkg)}
-                  className={`w-full py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                    pkg.popular
-                      ? 'bg-primary-600 text-white hover:bg-primary-700'
-                      : 'bg-surface-100 text-surface-700 hover:bg-surface-200'
-                  }`}
-                >
-                  <span className="flex items-center justify-center gap-2">
-                    <ShoppingCart className="w-4 h-4" /> Kaufen
-                  </span>
-                </button>
               </div>
-            </div>
-          )
-        })}
-      </div>
+            )
+          })}
+        </div>
 
       {/* Coupon Section */}
       <h2 className="text-xl font-semibold text-surface-900 mb-4 flex items-center gap-2">
@@ -410,6 +411,18 @@ export default function Shop() {
           Rechtliche Details: <Link to="/nutzungsbedingungen" className="text-primary-700 underline">Nutzungsbedingungen</Link> · <Link to="/widerruf-digital" className="text-primary-700 underline">Widerruf digital</Link>
         </p>
       </div>
+
+      </div>
+      {shopClosedForAlpha && (
+        <div className="absolute inset-0 z-30 flex items-start justify-center pt-28">
+          <div className="mx-4 max-w-2xl rounded-2xl border border-amber-200 bg-white/92 backdrop-blur-md shadow-xl px-5 py-4 text-center">
+            <p className="text-sm font-semibold text-amber-800">Shop aktuell geschlossen</p>
+            <p className="text-xs text-amber-700 mt-1">
+              Für die Alpha ist der Shop vorübergehend deaktiviert. Die Seite bleibt sichtbar, Käufe und Einlösungen sind aktuell nicht möglich.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Purchase modal */}
       {selectedPackage && (
