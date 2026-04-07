@@ -368,7 +368,7 @@ export default function PatientChat({
       cancelled = true
       setIsTyping(false)
     }
-  }, [patient.id, mode, initialSnapshot?.patientId, conversationLang, patientCanSpeak, injectedPatientMessage?.id, injectedPatientMessage?.text, onInjectedMessageConsumed])
+  }, [patient.id, mode, initialSnapshot?.patientId, conversationLang, patientCanSpeak, injectedPatientMessage?.id, injectedPatientMessage?.text])
 
   useEffect(() => {
     if (typeof onSnapshotChange !== 'function') return
@@ -393,7 +393,7 @@ export default function PatientChat({
       }]
     })
     if (typeof onInjectedMessageConsumed === 'function') onInjectedMessageConsumed(messageId)
-  }, [injectedPatientMessage?.id, injectedPatientMessage?.text, onInjectedMessageConsumed])
+  }, [injectedPatientMessage?.id, injectedPatientMessage?.text])
 
   useEffect(() => {
     const el = messagesScrollRef.current

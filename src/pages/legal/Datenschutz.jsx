@@ -9,10 +9,11 @@ export default function Datenschutz() {
       />
       <div className="card p-6 sm:p-8 space-y-5 text-sm text-surface-700">
         <h1 className="font-display text-3xl font-bold text-surface-900">Datenschutzerklärung</h1>
-        <p>Stand: 01.04.2026</p>
+        <p>Stand: 07.04.2026</p>
         <section className="space-y-1">
           <p className="font-semibold text-surface-900">Verantwortliche Stelle</p>
-          <p>Medic Inc (Projektbetrieb) – Kontaktdaten im Impressum.</p>
+          <p>Jonas Klein (Medic Inc, nicht-gewerbliches Freizeitprojekt)</p>
+          <p>Kontakt: medicincde [at] gmail [dot] com</p>
         </section>
         <section className="space-y-1">
           <p className="font-semibold text-surface-900">Verarbeitete Daten</p>

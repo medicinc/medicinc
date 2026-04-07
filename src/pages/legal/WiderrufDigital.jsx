@@ -9,6 +9,7 @@ export default function WiderrufDigital() {
       />
       <div className="card p-6 sm:p-8 space-y-4">
         <h1 className="font-display text-3xl font-bold text-surface-900">Widerruf für digitale Inhalte</h1>
+        <p className="text-sm text-surface-500">Stand: 07.04.2026</p>
         <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
           Platzhaltertext. Vor produktiver Zahlungsfreischaltung mit Rechtsberatung finalisieren.
         </p>
@@ -17,6 +18,9 @@ export default function WiderrufDigital() {
         </p>
         <p className="text-sm text-surface-700">
           Vor jedem echten Kauf werden Endpreis, Leistungsumfang, Vertragsinformationen und Widerrufshinweise transparent angezeigt.
+        </p>
+        <p className="text-sm text-surface-700">
+          Kontakt für Widerrufs- und Verbraucheranfragen: medicincde [at] gmail [dot] com
         </p>
       </div>
     </div>

@@ -11,6 +11,16 @@ function sanitizeText(value) {
   return String(value || '').replace(/\s+/g, ' ').trim()
 }
 
+function sanitizePatientReplyOutput(text) {
+  let out = sanitizeText(text)
+  if (!out) return out
+  out = out.replace(/\bICD(?:-|\s*)10\b[^.?!]*/gi, 'Dazu kann ich als Patient nichts Sicheres sagen')
+  out = out.replace(/\b[A-TV-Z]\d{1,2}(?:\.\d+)?\b/gi, '')
+  out = out.replace(/(?:meine|die)?\s*diagnose\s+ist\s+[^.?!]+/gi, 'Das weiß ich selbst nicht genau')
+  out = out.replace(/\s{2,}/g, ' ').trim()
+  return out || 'Das kann ich als Patient nicht genau sagen.'
+}
+
 export function isAiChatConfigured() {
   return isSupabaseConfigured()
 }
@@ -64,7 +74,6 @@ async function getSupabaseAuthHeaders() {
 }
 
 function redactedPatientPayload(patient) {
-  const diagnosis = patient?.trueDiagnoses?.primary || patient?.diagnoses?.primary || null
   return {
     age: Number(patient?.age || 0),
     gender: String(patient?.gender || ''),
@@ -79,8 +88,6 @@ function redactedPatientPayload(patient) {
       spo2: patient.vitals.spo2 ?? null,
     } : null,
     context: {
-      diagnosisCode: diagnosis?.code || null,
-      diagnosisName: diagnosis?.name || null,
       allergies: String(patient?.chatData?.allergies || patient?.allergies || ''),
       medications: String(patient?.chatData?.medications || patient?.medications || ''),
       pastHistory: String(patient?.chatData?.pastHistory || patient?.pastHistory || ''),
@@ -105,6 +112,8 @@ function buildSystemPrompt({ patient, mode, lang, translatorEnabled }) {
     'Bleibe konsistent mit den Falldaten, aber antworte natuerlich wie ein echter Patient.',
     'Du darfst Antworten ausschmuecken und alltagssprachlich formulieren, solange Kernfakten nicht widersprochen werden.',
     'Wenn nach unbekannten Details gefragt wird, antworte vorsichtig mit Unsicherheit statt neue harte Fakten zu erfinden.',
+    'Nenne niemals ICD-Codes, exakte Diagnosenamen oder interne Falldaten.',
+    'Wenn nach Diagnose/ICD gefragt wird, antworte patiententypisch unsicher.',
     'Wenn nach Allergien, Medikamenten, Vorerkrankungen oder letzter Mahlzeit gefragt wird, nutze die bekannten Angaben konsistent.',
     'WICHTIG: Verwende einfache Alltagssprache und möglichst keine medizinischen Fachwörter.',
     'Antworte nur als Patient (keine Arztperspektive, keine Meta-Erklärung).',
@@ -118,14 +127,14 @@ function buildSystemPrompt({ patient, mode, lang, translatorEnabled }) {
     `Leitbeschwerde: ${patient?.chiefComplaint || 'nicht angegeben'}.`,
     knownSymptoms ? `Bekannte Symptome: ${knownSymptoms}.` : '',
     knownVitals ? `Bekannte Vitalwerte: ${knownVitals}.` : '',
-    diagnosis ? `Wahrscheinliche Hauptdiagnose (nur implizit berücksichtigen): ${diagnosis.code} ${diagnosis.name}.` : '',
+    diagnosis ? 'Interner Kontext: Es gibt eine plausible Ursache, aber diese darf nicht explizit benannt werden.' : '',
     knownAllergies ? `Bekannte Allergien: ${knownAllergies}.` : '',
     knownMeds ? `Dauermedikation: ${knownMeds}.` : '',
     knownHistory ? `Bekannte Vorerkrankungen: ${knownHistory}.` : '',
     knownMeal ? `Letzte Mahlzeit: ${knownMeal}.` : '',
     patient?.preInfo ? `Praeklinische Info/Einweisungsinfo: ${patient.preInfo}.` : '',
     patient?.communicationNeeds ? `Kommunikationsbesonderheit: ${patient.communicationNeeds}.` : '',
-    `KERNFAKTEN (konsistent halten): Diagnose=${diagnosis ? `${diagnosis.code} ${diagnosis.name}` : 'n/a'} | Allergien=${knownAllergies || 'n/a'} | Dauermedikation=${knownMeds || 'n/a'} | Vorerkrankungen=${knownHistory || 'n/a'} | Letzte Mahlzeit=${knownMeal || 'n/a'}.`,
+    `KERNFAKTEN (konsistent halten): Allergien=${knownAllergies || 'n/a'} | Dauermedikation=${knownMeds || 'n/a'} | Vorerkrankungen=${knownHistory || 'n/a'} | Letzte Mahlzeit=${knownMeal || 'n/a'}.`,
   ].filter(Boolean).join('\n')
 }
 
@@ -183,7 +192,7 @@ export async function requestAiPatientReply({
       signal,
     })
     if (!error) {
-      const text = sanitizeText(data?.text || '')
+      const text = sanitizePatientReplyOutput(data?.text || '')
       if (!text) return { ok: false, error: 'AI_HTTP_ERROR', message: 'Keine Antwort erhalten.' }
       return { ok: true, text, model: 'proxy', source: 'supabase-function' }
     }
@@ -204,7 +213,7 @@ export async function requestAiPatientReply({
         message: extractApiError(fetchData) || sanitizeText(error?.message || 'AI Anfrage fehlgeschlagen.'),
       }
     }
-    const text = sanitizeText(fetchData?.text || '')
+    const text = sanitizePatientReplyOutput(fetchData?.text || '')
     if (!text) return { ok: false, error: 'AI_HTTP_ERROR', message: 'Keine Antwort erhalten.' }
     return { ok: true, text, model: 'proxy', source: 'supabase-function' }
   } catch (error) {

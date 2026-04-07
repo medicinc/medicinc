@@ -245,6 +245,12 @@ function buildPatientFromBase(base, arrivalType, firstName, lastName, age, isMal
     : 2 + Math.floor(Math.random() * 2)
   const dyspneaSeed = /atem|dyspnoe|stridor|hypox|lungen/.test(complaintText) ? 4 : 1
   const anamnesisProfile = buildAnamnesisProfile(!!special.anamnesisMeme)
+  const hasInfectiousCode = /^(A4|J1[258]|J18|N10|T81\.4|K3[5-7]|K81|L0[23]|R50)/.test(primaryCode)
+  const hasInfectiousSymptoms = /fieber|schuettelfrost|schüttelfrost|infekt|pneumonie|husten|eitrig|dysurie|flankenschmerz|wundinfektion|sepsis/.test(complaintSeedText)
+  const likelyOpenWound = /wunde|platzwunde|schnitt|offene verletzung|blutung/.test(complaintSeedText) || /^S(0[019]|[3-9]1)\./.test(primaryCode)
+  const infectionSeed = hasInfectiousCode || hasInfectiousSymptoms
+    ? 2.2 + Math.random() * 1.2
+    : (likelyOpenWound ? 0.6 + Math.random() * 0.5 : 0.15 + Math.random() * 0.2)
   return {
     id: `p_${Date.now()}_${patientCounter}`,
     name: `${firstName} ${lastName}`,
@@ -296,7 +302,7 @@ function buildPatientFromBase(base, arrivalType, firstName, lastName, age, isMal
       consciousness: 'wach',
       pain: painSeed,
       dyspnea: dyspneaSeed,
-      infectionLoad: 0.6,
+      infectionLoad: Number(infectionSeed.toFixed(2)),
       volumeStatus: 0,
       hemodynamics: 0,
       complaintLevel: 2,
