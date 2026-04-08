@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { getCurrentRank } from '../../data/ranks'
 import {
-  Activity, Menu, X, Home, Stethoscope, Building2, BookOpen,
+  Menu, X, Home, Stethoscope, Building2, BookOpen,
   LogOut, User, ChevronDown, Trophy, BarChart3, ShoppingCart, Wallet,
   Library, Settings, Ambulance
 } from 'lucide-react'
@@ -79,9 +79,13 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link to={isAuthenticated && !isSetup ? '/dashboard' : '/'} className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center shadow-lg shadow-primary-500/20 group-hover:shadow-primary-500/40 transition-shadow">
-              <Activity className="w-5 h-5 text-white" />
-            </div>
+            <img
+              src="/brand/medic-inc-mark.svg"
+              alt=""
+              width={36}
+              height={36}
+              className="w-9 h-9 shrink-0 rounded-xl shadow-lg shadow-primary-500/20 group-hover:shadow-primary-500/40 transition-shadow"
+            />
             <span className="font-display font-bold text-xl text-surface-900">Medic Inc</span>
           </Link>
 

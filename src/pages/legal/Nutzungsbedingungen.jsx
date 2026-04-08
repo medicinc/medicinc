@@ -9,7 +9,7 @@ export default function Nutzungsbedingungen() {
       />
       <div className="card p-6 sm:p-8 space-y-4 text-sm text-surface-700">
         <h1 className="font-display text-3xl font-bold text-surface-900">Nutzungsbedingungen</h1>
-        <p>Stand: 07.04.2026</p>
+        <p>Stand: 08.04.2026</p>
         <p>
           Medic Inc ist eine Lern- und Simulationsplattform. Inhalte dienen ausschließlich der Simulation und ersetzen keine
           medizinische, rechtliche oder sonstige professionelle Beratung.

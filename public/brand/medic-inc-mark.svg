@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-labelledby="title desc">
+  <title id="title">Medic Inc Mark</title>
+  <desc id="desc">Square brand mark with blue to green gradient and activity pulse line, matching primary-500 and accent-500.</desc>
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#338cff"/>
+      <stop offset="100%" stop-color="#17b164"/>
+    </linearGradient>
+  </defs>
+  <!-- Matches rounded-xl at 36x36 px: r = 12/36 -->
+  <rect width="1024" height="1024" rx="341.333" fill="url(#g)"/>
+  <!-- Lucide activity path (MIT), centered like w-9 + w-5 -->
+  <svg x="227.556" y="227.556" width="568.889" height="568.889" viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet">
+    <path
+      d="M22 12h-4l-3 9L9 3l-3 9H2"
+      fill="none"
+      stroke="#ffffff"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </svg>
+</svg>

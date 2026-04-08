@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom'
-import { Activity } from 'lucide-react'
 
 export default function Footer() {
   return (
@@ -7,9 +6,13 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center">
-              <Activity className="w-5 h-5 text-white" />
-            </div>
+            <img
+              src="/brand/medic-inc-mark.svg"
+              alt=""
+              width={36}
+              height={36}
+              className="w-9 h-9 shrink-0 rounded-xl"
+            />
             <span className="font-display font-bold text-xl text-white">Medic Inc</span>
           </Link>
           <p className="text-xs text-surface-400 max-w-2xl text-center sm:text-right">

@@ -9,18 +9,26 @@ export default function WiderrufDigital() {
       />
       <div className="card p-6 sm:p-8 space-y-4">
         <h1 className="font-display text-3xl font-bold text-surface-900">Widerruf für digitale Inhalte</h1>
-        <p className="text-sm text-surface-500">Stand: 07.04.2026</p>
-        <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-          Platzhaltertext. Vor produktiver Zahlungsfreischaltung mit Rechtsberatung finalisieren.
+        <p className="text-sm text-surface-500">Stand: 08.04.2026</p>
+        <p className="text-sm text-surface-700">
+          <strong>Aktueller Stand (Alpha):</strong> Es werden hier keine kostenpflichtigen digitalen Inhalte oder
+          entgeltlichen Zusatzleistungen über diese Seite abgeschlossen; der virtuelle Shop ist in der Alpha-Phase
+          deaktiviert. Ein gesetzliches Widerrufsrecht gegenüber kostenpflichtigen digitalen Verträgen wird daher
+          derzeit typischerweise nicht ausgelöst.
         </p>
         <p className="text-sm text-surface-700">
-          Bei digitalen Inhalten kann das Widerrufsrecht erlöschen, wenn die Ausführung sofort beginnt und du dem vorab ausdrücklich zustimmst.
+          <strong>Spätere kostenpflichtige Angebote:</strong> Sollten entgeltliche digitale Inhalte eingeführt werden,
+          erhältst du vor Abschluss die gesetzlich vorgeschriebenen Vertrags- und Widerrufsbelehrungen (u.&nbsp;a. nach
+          den Vorgaben für Fernabsatzverträge). Bei digitalen Inhalten kann das Widerrufsrecht unter bestimmten
+          Voraussetzungen erlöschen, wenn die Ausführung vor Ende der Widerrufsfrist beginnt und du dem ausdrücklich
+          zugestimmt hast – die genaue Fassung wird dann im Bestellprozess angezeigt.
         </p>
         <p className="text-sm text-surface-700">
-          Vor jedem echten Kauf werden Endpreis, Leistungsumfang, Vertragsinformationen und Widerrufshinweise transparent angezeigt.
+          Kontakt für Verbraucheranfragen: medicincde [at] gmail [dot] com
         </p>
-        <p className="text-sm text-surface-700">
-          Kontakt für Widerrufs- und Verbraucheranfragen: medicincde [at] gmail [dot] com
+        <p className="text-xs text-surface-500">
+          Hinweis: Verbindliche Rechtstexte für Zahlungs- und Vertragsstart sollten vor Produktivstart mit
+          Rechtsberatung final geprüft werden.
         </p>
       </div>
     </div>

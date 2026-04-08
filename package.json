@@ -12,6 +12,8 @@
     "test:e2e:auth": "playwright test tests/authenticated.spec.js"
   },
   "dependencies": {
+    "@fontsource/inter": "^5.2.8",
+    "@fontsource/plus-jakarta-sans": "^5.2.8",
     "@supabase/supabase-js": "^2.49.1",
     "lucide-react": "^0.460.0",
     "react": "^18.3.1",
