@@ -37,13 +37,33 @@ export default defineConfig(({ mode }) => {
     .map((obj) => `    <script type="application/ld+json">${JSON.stringify(obj)}</script>`)
     .join('\n')
 
+  /** consentmanager CMP – muss per Vite-Tags injiziert werden, sonst fehlt es im dist/index.html */
+  const consentManagerTags = [
+    {
+      tag: 'script',
+      attrs: {
+        type: 'text/javascript',
+        'data-cmp-ab': '1',
+        src: 'https://cdn.consentmanager.net/delivery/autoblocking/663c35cbb2c06.js',
+        'data-cmp-host': 'b.delivery.consentmanager.net',
+        'data-cmp-cdn': 'cdn.consentmanager.net',
+        'data-cmp-codesrc': '0',
+      },
+      injectTo: 'head-prepend',
+    },
+  ]
+
   return {
     plugins: [
       react(),
       {
         name: 'seo-inject-index-html',
         transformIndexHtml(html) {
-          return html.replace(/%SITE_URL%/g, siteUrl).replace('</head>', `${ldScripts}\n  </head>`)
+          const replaced = html.replace(/%SITE_URL%/g, siteUrl).replace('</head>', `${ldScripts}\n  </head>`)
+          return {
+            html: replaced,
+            tags: consentManagerTags,
+          }
         },
       },
     ],
