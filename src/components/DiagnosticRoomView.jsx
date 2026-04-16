@@ -8,6 +8,7 @@ import { playOneShot } from '../utils/soundManager'
 import { getDiagnosticRoomBackground, pickDiagnosticCaptureImage } from '../data/diagnosticImagingAssets'
 import { buildDiagnosticPlaceholderImage, getOrderModality } from '../data/ordersCatalog'
 import HklPtcaMinigame from './HklPtcaMinigame'
+import { useAuth } from '../context/AuthContext'
 
 function detectRoomModality(equipmentId) {
   const id = String(equipmentId || '').toLowerCase()
@@ -111,6 +112,8 @@ export default function DiagnosticRoomView({
   onUpsertDocument,
   onClinicalProcedureEffect,
 }) {
+  const { user } = useAuth()
+  const canUseDebugTools = user?.role === 'admin'
   const modality = detectRoomModality(roomEntry?.equipmentId)
   const [busy, setBusy] = useState(false)
   const [captureModalOpen, setCaptureModalOpen] = useState(false)
@@ -1320,6 +1323,36 @@ export default function DiagnosticRoomView({
                       <span className="text-[11px] text-slate-600">
                         Slice {Math.min(ctSliceIndex + 1, Math.max(1, ctSeriesFrames.length))}/{Math.max(1, ctSeriesFrames.length)}
                       </span>
+                      {canUseDebugTools && (
+                        <button
+                          onClick={() => {
+                            setCtPathologyDebugEnabled((prev) => !prev)
+                            setCtPathologyDebugStart(null)
+                            setCtPathologyDebugCursor(null)
+                          }}
+                          className={`px-2 py-1 rounded text-xs ${ctPathologyDebugEnabled ? 'bg-red-600 text-white' : 'bg-slate-200 text-slate-700'}`}
+                        >
+                          CT Patho-Debug {ctPathologyDebugEnabled ? 'an' : 'aus'}
+                        </button>
+                      )}
+                      {canUseDebugTools && ctPathologyDebugEnabled && (
+                        <>
+                          <button onClick={() => { setCtPathologyDebugStart(null); setCtPathologyDebugCursor(null) }} className="px-2 py-1 rounded bg-slate-200 text-xs">Punkt reset</button>
+                          <button onClick={() => setCtPathologyDebugRects((prev) => prev.slice(0, -1))} className="px-2 py-1 rounded bg-slate-200 text-xs">Letzte Box loeschen</button>
+                          <button onClick={() => { setCtPathologyDebugRects([]); setCtPathologyDebugStart(null); setCtPathologyDebugCursor(null) }} className="px-2 py-1 rounded bg-amber-100 text-amber-800 text-xs">Alle Boxen loeschen</button>
+                          <button
+                            onClick={() => {
+                              setCtPathologySliceSpread(CT_PATHOLOGY_DEBUG_DEFAULTS.sliceSpread)
+                              setCtPathologyMaxOpacityBleed(CT_PATHOLOGY_DEBUG_DEFAULTS.maxOpacityBleed)
+                              setCtPathologyMaxOpacityIschemia(CT_PATHOLOGY_DEBUG_DEFAULTS.maxOpacityIschemia)
+                            }}
+                            className="px-2 py-1 rounded bg-slate-200 text-xs"
+                          >
+                            Tuning reset
+                          </button>
+                          <button onClick={copyCtPathologyDebugPayload} className="px-2 py-1 rounded bg-emerald-600 text-white text-xs">JSON kopieren</button>
+                        </>
+                      )}
                     </div>
                     {ctSeriesFrames.length > 1 && (
                       <label className="mt-2 block text-[11px] text-slate-600">
@@ -1368,7 +1401,7 @@ export default function DiagnosticRoomView({
                         Testmodus aktiv: jedes CT nutzt aktuell den Ordner <code>/imaging/ct/thorax/gesund</code>.
                       </p>
                     )}
-                    {ctPathologyDebugEnabled && (
+                    {canUseDebugTools && ctPathologyDebugEnabled && (
                       <div className="mt-2 rounded border border-red-200 bg-red-50 p-2">
                         <p className="text-[11px] text-red-700">
                           Debug aktiv: Mit gedrueckter Maustaste ziehen und loslassen, um eine Pathologie-Grenzbox fuer den aktuellen Slice zu speichern.

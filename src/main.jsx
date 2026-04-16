@@ -79,7 +79,7 @@ function runAlphaReleaseStorageCleanup() {
       if (key.startsWith('medisim_user_')) {
         const profile = safeParseJson(window.localStorage.getItem(key), null)
         const email = String(profile?.email || '').toLowerCase()
-        if (LEGACY_TEST_EMAILS.has(email) || profile?.role === 'admin' || profile?.role === 'guest') {
+        if (LEGACY_TEST_EMAILS.has(email) || profile?.role === 'guest') {
           keysToRemove.push(key)
         }
         continue
@@ -97,7 +97,6 @@ function runAlphaReleaseStorageCleanup() {
     const activeEmail = String(activeProfile?.email || '').toLowerCase()
     if (
       LEGACY_TEST_EMAILS.has(activeEmail)
-      || activeProfile?.role === 'admin'
       || activeProfile?.role === 'guest'
     ) {
       keysToRemove.push('medisim_user')

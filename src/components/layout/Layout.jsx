@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom'
 import Navbar from './Navbar'
 import Footer from './Footer'
 import GlobalPager from '../GlobalPager'
+import GlobalDevMenu from './GlobalDevMenu'
 import DailyLoginOverlay from '../DailyLoginOverlay'
 import { useAuth } from '../../context/AuthContext'
 import { canClaimDailyLogin, localCalendarDateKey, DAILY_LOGIN_TOTAL_DAYS } from '../../data/dailyLoginRewards'
@@ -73,6 +74,7 @@ export default function Layout() {
         <Outlet />
       </main>
       {showPager && <GlobalPager />}
+      <GlobalDevMenu />
       {showDailyLogin && (
         <DailyLoginOverlay
           user={user}
