@@ -32,7 +32,7 @@ export default function Register() {
     setError('')
     setInfo('')
     if (!sb) {
-      setError('Registrierung ist nur mit konfiguriertem Supabase-Projekt möglich.')
+      setError('Registrierung ist derzeit nicht verfuegbar.')
       return
     }
     if (!hasAllRequiredRegistrationConsents(consents)) {
@@ -55,7 +55,7 @@ export default function Register() {
   if (!sb) {
     return (
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-8">
-        <Seo title="Registrierung | Medic Inc" description="Konto für Medic Inc erstellen – medizinische Simulation mit Supabase-Auth." />
+        <Seo title="Registrierung | Medic Inc" description="Konto fuer Medic Inc erstellen." />
         <div className="w-full max-w-xl card p-8 border-amber-200 bg-amber-50/70">
           <div className="flex items-center gap-2.5 mb-6">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center">
@@ -63,10 +63,7 @@ export default function Register() {
             </div>
             <span className="font-display font-bold text-xl">Medic Inc</span>
           </div>
-          <p className="text-sm text-amber-800 mb-4">
-            Supabase ist nicht konfiguriert (<code className="text-xs">VITE_SUPABASE_URL</code> / <code className="text-xs">VITE_SUPABASE_ANON_KEY</code>).
-            Ohne diese Variablen bleibt die Registrierung geschlossen.
-          </p>
+          <p className="text-sm text-amber-800 mb-4">Die Registrierung ist derzeit nicht verfuegbar.</p>
           <Link to="/login" className="btn-primary inline-flex items-center gap-2">
             Zum Login <ArrowRight className="w-4 h-4" />
           </Link>
@@ -77,7 +74,7 @@ export default function Register() {
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-8">
-      <Seo title="Registrierung | Medic Inc" description="Konto für Medic Inc erstellen – medizinische Simulation mit Supabase-Auth." />
+      <Seo title="Registrierung | Medic Inc" description="Konto fuer Medic Inc erstellen." />
       <div className="w-full max-w-md card p-8">
         <div className="flex items-center gap-2.5 mb-6">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center">
@@ -86,9 +83,7 @@ export default function Register() {
           <span className="font-display font-bold text-xl">Medic Inc</span>
         </div>
         <h1 className="font-display text-2xl font-bold text-surface-900 mb-2">Konto erstellen</h1>
-        <p className="text-surface-500 text-sm mb-6">
-          Nutze dieselbe E-Mail/Passwort-Kombination wie in deinem Supabase-Auth-Projekt.
-        </p>
+        <p className="text-surface-500 text-sm mb-6">Erstelle dein Konto fuer den Zugang zur Alpha.</p>
 
         {error && (
           <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">{error}</div>

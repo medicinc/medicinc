@@ -41,9 +41,9 @@ async function getSupabaseAuthHeaders() {
 }
 
 export async function requestDispatchReply({ eventTitle, eventContext = null, userMessage, history = [], signal }) {
-  if (!isSupabaseConfigured()) return { ok: false, message: 'AI-Dialog ist nicht verfügbar (Supabase nicht konfiguriert).' }
+  if (!isSupabaseConfigured()) return { ok: false, message: 'AI-Dialog ist derzeit nicht verfuegbar.' }
   const supabaseUrl = sanitize(import.meta.env.VITE_SUPABASE_URL || '')
-  if (!supabaseUrl) return { ok: false, message: 'VITE_SUPABASE_URL fehlt.' }
+  if (!supabaseUrl) return { ok: false, message: 'AI-Dialog ist derzeit nicht verfuegbar.' }
   const endpoint = `${supabaseUrl.replace(/\/+$/, '')}/functions/v1/dispatch-chat`
   const system = [
     'Du spielst einen Leitstellendisponenten in einer realistischen Krankenhaus-Simulation.',
@@ -67,7 +67,7 @@ export async function requestDispatchReply({ eventTitle, eventContext = null, us
   try {
     const authHeaders = await getSupabaseAuthHeaders()
     if (!authHeaders.Authorization) {
-      return { ok: false, message: 'Supabase-Session ungültig. Bitte neu einloggen.' }
+      return { ok: false, message: 'Deine Sitzung ist ungueltig. Bitte melde dich neu an.' }
     }
     const res = await fetch(endpoint, {
       method: 'POST',

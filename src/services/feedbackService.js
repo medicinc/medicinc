@@ -130,15 +130,15 @@ export async function uploadFeedbackFiles(userId, fileList) {
 export async function submitFeedback({ title, body, category, attachmentPaths = [] }) {
   const sb = getSupabaseClient()
   if (!sb) {
-    return { ok: false, message: 'Supabase nicht konfiguriert.', details: { reason: 'no_client' } }
+    return { ok: false, message: 'Feedback ist derzeit nicht verfuegbar.', details: { reason: 'no_client' } }
   }
   const url = getFunctionUrl('feedback-submit')
   if (!url) {
-    return { ok: false, message: 'Supabase-URL fehlt.', details: { reason: 'no_function_url' } }
+    return { ok: false, message: 'Feedback ist derzeit nicht verfuegbar.', details: { reason: 'no_function_url' } }
   }
   const anon = String(import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim()
   if (!anon) {
-    return { ok: false, message: 'VITE_SUPABASE_ANON_KEY fehlt.', details: { reason: 'no_anon' } }
+    return { ok: false, message: 'Feedback ist derzeit nicht verfuegbar.', details: { reason: 'no_anon' } }
   }
 
   const { token, error: tokenErr, refreshed, usedCachedToken } = await getRefreshedAccessToken(sb)

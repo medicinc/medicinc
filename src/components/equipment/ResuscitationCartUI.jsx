@@ -1165,48 +1165,6 @@ export default function ResuscitationCartUI({
           </div>
         </div>
       )}
-      <div className="rounded-xl border border-surface-200 bg-white p-2.5">
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => setAudioDebugOpen((v) => !v)}
-            className="text-xs px-2.5 py-1.5 rounded-lg bg-surface-100 text-surface-700 hover:bg-surface-200"
-          >
-            Audio-Debug {audioDebugOpen ? 'ausblenden' : 'anzeigen'}
-          </button>
-          <button
-            onClick={() => setScrollDebugOpen((v) => !v)}
-            className="text-xs px-2.5 py-1.5 rounded-lg bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
-          >
-            Scroll-Debug {scrollDebugOpen ? 'ausblenden' : 'anzeigen'}
-          </button>
-        </div>
-        {audioDebugOpen && (
-          <div className="mt-2 text-[11px] text-surface-700 space-y-1">
-            <p>Resus-Key: <span className="font-mono">{rhythmLoopKey.current}</span></p>
-            <div className="rounded-lg border border-surface-200 bg-surface-50 p-2 font-mono text-[10px]">
-              {audioSnapshot.length === 0 ? (
-                <p>keine aktiven loops</p>
-              ) : (
-                audioSnapshot.map((entry) => (
-                  <p key={entry.key}>
-                    {entry.key} | {entry.type} | cf={entry.seamCrossfadeSec ?? '-'} | s={entry.startAt ?? '-'} e={entry.endAt ?? '-'}
-                  </p>
-                ))
-              )}
-            </div>
-          </div>
-        )}
-        {scrollDebugOpen && (
-          <div className="mt-2 rounded-lg border border-indigo-200 bg-indigo-50 p-2 text-[11px] text-indigo-900 space-y-1 font-mono">
-            <p>parent: {scrollDebug.parentTag} | top={scrollDebug.parentTop} / max={Math.max(0, scrollDebug.parentHeight - scrollDebug.parentClient)}</p>
-            <p>parentClass: {scrollDebug.parentClass || '-'}</p>
-            <p>nestedScrollables: {scrollDebug.nestedScrollableCount}</p>
-            <p>wheel: dY={scrollDebug.wheelDeltaY} | t={scrollDebug.wheelTime}</p>
-            <p>target: {scrollDebug.wheelTarget}</p>
-            <p>nestedHit: {scrollDebug.wheelNested}</p>
-          </div>
-        )}
-      </div>
       {showAirwayModal && (
         <div className="fixed inset-0 z-[95] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/45 backdrop-blur-sm" onClick={() => setShowAirwayModal(false)} />

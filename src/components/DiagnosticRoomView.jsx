@@ -962,7 +962,7 @@ export default function DiagnosticRoomView({
   const handleCaptureImageError = () => {
     const fallback = buildDiagnosticPlaceholderImage(modality, String(modality || '').toUpperCase())
     setCaptureImage((prev) => ({ ...(prev || {}), ...fallback }))
-    setMessage({ type: 'error', text: 'Bilddatei nicht gefunden. Platzhalter wird angezeigt. Bitte Dateipfade/Filenames in public/imaging prüfen.' })
+    setMessage({ type: 'error', text: 'Bild momentan nicht verfuegbar. Es wird eine Ersatzansicht angezeigt.' })
   }
 
   return (
@@ -1320,34 +1320,6 @@ export default function DiagnosticRoomView({
                       <span className="text-[11px] text-slate-600">
                         Slice {Math.min(ctSliceIndex + 1, Math.max(1, ctSeriesFrames.length))}/{Math.max(1, ctSeriesFrames.length)}
                       </span>
-                      <button
-                        onClick={() => {
-                          setCtPathologyDebugEnabled((prev) => !prev)
-                          setCtPathologyDebugStart(null)
-                          setCtPathologyDebugCursor(null)
-                        }}
-                        className={`px-2 py-1 rounded text-xs ${ctPathologyDebugEnabled ? 'bg-red-600 text-white' : 'bg-slate-200 text-slate-700'}`}
-                      >
-                        CT Patho-Debug {ctPathologyDebugEnabled ? 'an' : 'aus'}
-                      </button>
-                      {ctPathologyDebugEnabled && (
-                        <>
-                          <button onClick={() => { setCtPathologyDebugStart(null); setCtPathologyDebugCursor(null) }} className="px-2 py-1 rounded bg-slate-200 text-xs">Punkt reset</button>
-                          <button onClick={() => setCtPathologyDebugRects((prev) => prev.slice(0, -1))} className="px-2 py-1 rounded bg-slate-200 text-xs">Letzte Box löschen</button>
-                          <button onClick={() => { setCtPathologyDebugRects([]); setCtPathologyDebugStart(null); setCtPathologyDebugCursor(null) }} className="px-2 py-1 rounded bg-amber-100 text-amber-800 text-xs">Alle Boxen löschen</button>
-                          <button
-                            onClick={() => {
-                              setCtPathologySliceSpread(CT_PATHOLOGY_DEBUG_DEFAULTS.sliceSpread)
-                              setCtPathologyMaxOpacityBleed(CT_PATHOLOGY_DEBUG_DEFAULTS.maxOpacityBleed)
-                              setCtPathologyMaxOpacityIschemia(CT_PATHOLOGY_DEBUG_DEFAULTS.maxOpacityIschemia)
-                            }}
-                            className="px-2 py-1 rounded bg-slate-200 text-xs"
-                          >
-                            Tuning reset
-                          </button>
-                          <button onClick={copyCtPathologyDebugPayload} className="px-2 py-1 rounded bg-emerald-600 text-white text-xs">JSON kopieren</button>
-                        </>
-                      )}
                     </div>
                     {ctSeriesFrames.length > 1 && (
                       <label className="mt-2 block text-[11px] text-slate-600">

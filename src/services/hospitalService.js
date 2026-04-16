@@ -59,7 +59,7 @@ const SEEDED_HOSPITALS = [
       maxMembers: 250,
       level: 8,
       reputation: 95,
-      motto: 'Spitzenmedizin für alle',
+      motto: 'Spitzenmedizin fuer alle',
     },
     activityLog: [],
     dailyCosts: 0,

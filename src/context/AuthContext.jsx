@@ -11,70 +11,8 @@ import { registerWithAlphaGate } from '../services/alphaRegistrationService'
 
 const AuthContext = createContext(null)
 const XP_PER_LEVEL = 500
-const FIXED_ADMIN_ACCOUNTS = [
-  {
-    name: 'Medic Inc Leitstellen-Admin',
-    username: 'leitstelle_admin',
-    email: 'leitstelle.admin@medisim.app',
-    password: 'M8d!Sim-ResQ-742',
-  },
-  {
-    name: 'Medic Inc Klinik-Admin',
-    username: 'klinik_admin',
-    email: 'klinik.admin@medisim.app',
-    password: 'N4chtVisite#905',
-  },
-]
-const FIXED_GUEST_ACCOUNTS = [
-  {
-    name: 'Medic Inc Gast 1',
-    username: 'gast_01',
-    email: 'gast.01@medisim.app',
-    password: 'GastDemo#101',
-  },
-  {
-    name: 'Medic Inc Gast 2',
-    username: 'gast_02',
-    email: 'gast.02@medisim.app',
-    password: 'GastDemo#202',
-  },
-  {
-    name: 'Medic Inc Gast 3',
-    username: 'gast_03',
-    email: 'gast.03@medisim.app',
-    password: 'GastDemo#303',
-  },
-  {
-    name: 'Medic Inc Alpha Test 1',
-    username: 'alpha_01',
-    email: 'alpha.01@medisim.app',
-    password: 'AlphaTest#401',
-  },
-  {
-    name: 'Medic Inc Alpha Test 2',
-    username: 'alpha_02',
-    email: 'alpha.02@medisim.app',
-    password: 'AlphaTest#402',
-  },
-  {
-    name: 'Medic Inc Alpha Test 3',
-    username: 'alpha_03',
-    email: 'alpha.03@medisim.app',
-    password: 'AlphaTest#403',
-  },
-  {
-    name: 'Medic Inc Alpha Test 4',
-    username: 'alpha_04',
-    email: 'alpha.04@medisim.app',
-    password: 'AlphaTest#404',
-  },
-  {
-    name: 'Medic Inc Alpha Test 5',
-    username: 'alpha_05',
-    email: 'alpha.05@medisim.app',
-    password: 'AlphaTest#405',
-  },
-]
+const FIXED_ADMIN_ACCOUNTS = []
+const FIXED_GUEST_ACCOUNTS = []
 const FIXED_ALLOWED_ACCOUNTS = [
   ...FIXED_ADMIN_ACCOUNTS,
   ...FIXED_GUEST_ACCOUNTS,
@@ -351,9 +289,7 @@ export function AuthProvider({ children }) {
       ? String(identifier).trim().toLowerCase()
       : (resolvedCandidate?.email ? String(resolvedCandidate.email).trim().toLowerCase() : null)
     if (sb) {
-      if (!email) {
-        throw new Error('Bitte mit E-Mail einloggen (oder einen Supabase-Account mit diesem Benutzernamen anlegen).')
-      }
+      if (!email) throw new Error('Bitte melde dich mit der E-Mail-Adresse deines Kontos an.')
       const { data, error } = await sb.auth.signInWithPassword({ email, password })
       if (!error && data.session?.user) {
         await migrateLocalProfileToSupabaseIfNeeded(data.session.user)
@@ -365,17 +301,17 @@ export function AuthProvider({ children }) {
         }
       }
       if (error) {
-        throw new Error(error.message || 'Supabase-Login fehlgeschlagen.')
+        throw new Error(error.message || 'Anmeldung fehlgeschlagen.')
       } else if (!data.session) {
-        throw new Error('Keine Session (z. B. E-Mail noch nicht bestätigt).')
+        throw new Error('Anmeldung derzeit nicht möglich. Bitte prüfe deine E-Mail-Bestätigung.')
       }
     }
     const parsed = resolveUserByIdentifier(identifier)
     if (!parsed || !FIXED_ALLOWED_EMAILS.has(normalizeIdentifier(parsed?.email))) {
       if (!sb && normalizedIdentifier.includes('@')) {
-        throw new Error('Supabase-Login ist nicht aktiv (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY fehlen in dieser Umgebung).')
+        throw new Error('Anmeldung ist derzeit nicht verfügbar. Bitte versuche es später erneut.')
       }
-      throw new Error('Zugang nicht erlaubt. Bitte nutze einen freigegebenen Account.')
+      throw new Error('Anmeldung fehlgeschlagen. Bitte prüfe deine Eingaben.')
     }
     const expectedPassword = String(parsed.authPassword || '')
     if (!expectedPassword || String(password || '') !== expectedPassword) {

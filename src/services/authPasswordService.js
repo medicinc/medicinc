@@ -11,7 +11,7 @@ function sanitize(value) {
 export async function requestPasswordReset(email) {
   const sb = getSupabaseClient()
   if (!sb) {
-    return { ok: false, message: 'Passwort-Zurücksetzen ist nur mit Supabase-Konto möglich.' }
+    return { ok: false, message: 'Passwort-Zuruecksetzen ist derzeit nicht verfuegbar.' }
   }
   const normalized = sanitize(email).toLowerCase()
   if (!normalized.includes('@')) {

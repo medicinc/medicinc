@@ -984,7 +984,7 @@ function advanceAlongRoute(current, points, stepDistance) {
 
 export default function Rettungsdienst() {
   const { user, updateUser, addMoney, triggerPolicePenalty, clearLegalState } = useAuth()
-  const canUseDevTools = !!user
+  const canUseDevTools = false
   const { createIvenaPrealertFromRescue, canReceivePatients, hospital } = useHospital()
   const dispatchDueRef = useRef(0)
   const mapScrollRef = useRef(null)

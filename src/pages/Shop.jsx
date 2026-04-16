@@ -189,7 +189,7 @@ export default function Shop() {
         ownedLegendaryTools: [...special.ownedLegendaryTools, toolId],
       },
     })
-    setSpecialResult({ success: true, message: 'Legendary Tool freigeschaltet (Demo-Kauf).' })
+    setSpecialResult({ success: true, message: 'Legendary Tool freigeschaltet.' })
     setTimeout(() => setSpecialResult(null), 3500)
   }
 
@@ -202,7 +202,7 @@ export default function Shop() {
         utilityPassInventory: inv,
       },
     })
-    setSpecialResult({ success: true, message: 'Utility Pass zum Inventar hinzugefügt (Demo-Kauf).' })
+    setSpecialResult({ success: true, message: 'Utility Pass zum Inventar hinzugefuegt.' })
     setTimeout(() => setSpecialResult(null), 3500)
   }
 

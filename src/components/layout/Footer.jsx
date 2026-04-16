@@ -16,8 +16,8 @@ export default function Footer() {
             <span className="font-display font-bold text-xl text-white">Medic Inc</span>
           </Link>
           <p className="text-xs text-surface-400 max-w-2xl text-center sm:text-right">
-            Work in Progress / Demo. Alle Inhalte dienen ausschließlich Demonstrations-, Test- und Lernzwecken.
-            Kein Medizinprodukt, keine medizinische Beratung und nicht für den klinischen Echtbetrieb bestimmt.
+            Medizinische Lern- und Trainingssimulation. Kein Medizinprodukt, keine medizinische Beratung
+            und nicht fuer den klinischen Echtbetrieb bestimmt.
           </p>
         </div>
 

@@ -151,13 +151,13 @@ export async function requestAiPatientReply({
     return {
       ok: false,
       error: 'AI_NOT_CONFIGURED',
-      message: 'AI-Dialog ist nicht verfügbar (Supabase nicht konfiguriert).',
+      message: 'AI-Dialog ist derzeit nicht verfuegbar.',
     }
   }
   const endpoint = getSupabaseFunctionUrl('patient-chat')
-  if (!endpoint) return { ok: false, error: 'AI_NOT_CONFIGURED', message: 'VITE_SUPABASE_URL fehlt.' }
+  if (!endpoint) return { ok: false, error: 'AI_NOT_CONFIGURED', message: 'AI-Dialog ist derzeit nicht verfuegbar.' }
   const sb = getSupabaseClient()
-  if (!sb) return { ok: false, error: 'AI_NOT_CONFIGURED', message: 'Supabase-Client nicht verfügbar.' }
+  if (!sb) return { ok: false, error: 'AI_NOT_CONFIGURED', message: 'AI-Dialog ist derzeit nicht verfuegbar.' }
 
   const compactHistory = history
     .slice(-10)
@@ -175,7 +175,7 @@ export async function requestAiPatientReply({
       return {
         ok: false,
         error: 'AI_AUTH_REQUIRED',
-        message: 'Supabase-Session ungültig. Bitte neu einloggen.',
+        message: 'Deine Sitzung ist ungueltig. Bitte melde dich neu an.',
       }
     }
     const payload = {

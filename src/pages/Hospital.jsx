@@ -144,7 +144,7 @@ export default function Hospital() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, updateUser, addMoney, triggerPolicePenalty, clearLegalState, resetUserProfile } = useAuth()
-  const canUseDevTools = !!user
+  const canUseDevTools = false
   const {
     hospital, hasPermission, isOwner, hireWorker, fireWorker, setWorkerStation,
     triagePatient, moveToWaiting, moveToTreatment, dischargePatient,

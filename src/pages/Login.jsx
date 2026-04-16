@@ -84,11 +84,7 @@ export default function Login() {
           </div>
 
           <h1 className="font-display text-3xl font-bold text-surface-900 mb-2">In dein Konto einloggen</h1>
-          <p className="text-surface-500 mb-8">
-            {getSupabaseClient()
-              ? 'Mit Supabase-Account (E-Mail/Passwort) oder Demo-Login.'
-              : 'Zugriff nur mit freigegebenem Demo-Login (ohne Supabase).'}
-          </p>
+          <p className="text-surface-500 mb-8">Melde dich mit der E-Mail-Adresse und dem Passwort deines Kontos an.</p>
 
           {passwordResetDone && (
             <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-800">
@@ -158,7 +154,7 @@ export default function Login() {
                   Passwort vergessen?
                 </button>
               ) : (
-                <span className="text-sm text-surface-400 cursor-default" title="Nur bei Supabase-Login verfügbar">
+                <span className="text-sm text-surface-400 cursor-default" title="Derzeit nicht verfuegbar">
                   Passwort vergessen?
                 </span>
               )}
@@ -202,7 +198,7 @@ export default function Login() {
               </button>
             </div>
             <p className="text-sm text-surface-600 mb-4">
-              Gib deine E-Mail-Adresse ein. Wir senden dir einen Link zum Setzen eines neuen Passworts (nur Supabase-Konten).
+              Gib deine E-Mail-Adresse ein. Wenn ein Konto vorhanden ist, senden wir dir einen Link zum Zuruecksetzen.
             </p>
             {forgotError && (
               <div className="mb-3 p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">{forgotError}</div>

@@ -52,7 +52,7 @@ const stats = [
   { value: 'ALPHA', label: 'Release-Status' },
   { value: 'SIM', label: 'Hybrid Fokus' },
   { value: '16+', label: 'Zielgruppe' },
-  { value: 'WIP', label: 'Aktive Entwicklung', icon: Star },
+  { value: '03.05.', label: 'Alpha-Start', icon: Star },
 ]
 
 const specialties = [
@@ -160,7 +160,7 @@ export default function Landing() {
               <div className="flex flex-wrap items-center gap-2 mb-4">
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary-50 border border-primary-100 rounded-full text-sm font-medium text-primary-700">
                   <Activity className="w-4 h-4 shrink-0" aria-hidden />
-                  Medizinische Simulation – Alpha Release in Vorbereitung
+                  Alpha-Start am 03.05.
                 </div>
               </div>
               <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-surface-900 leading-[1.1]">
@@ -193,9 +193,9 @@ export default function Landing() {
               </p>
 
               <div className="mt-6 max-w-2xl rounded-xl border border-amber-300 bg-amber-50/90 px-4 py-3 text-sm text-amber-900">
-                <p className="font-semibold">Hinweis (Alpha/WIP)</p>
+                <p className="font-semibold">Hinweis zur Alpha</p>
                 <p className="mt-1">
-                  Dieses Projekt ist im Alpha-Status. Inhalte können sich ändern.
+                  Diese Alpha ist ein frueher Spieltest. Inhalte koennen sich noch aendern.
                   Keine reale medizinische Beratung, kein Medizinprodukt, kein klinischer Echtbetrieb.
                 </p>
               </div>
@@ -334,15 +334,15 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-8">
             <div className="card p-6">
-              <p className="text-sm font-semibold text-primary-600 uppercase tracking-wider mb-2">Roadmap</p>
-              <h3 className="font-display text-2xl font-bold text-surface-900 mb-4">Geplanter Alpha-Zeitplan</h3>
+              <p className="text-sm font-semibold text-primary-600 uppercase tracking-wider mb-2">Release-Phasen</p>
+              <h3 className="font-display text-2xl font-bold text-surface-900 mb-4">Release-Zeitplan</h3>
               <div className="relative mt-2">
                 <div className="absolute left-[18px] top-2 bottom-2 w-1 rounded-full bg-gradient-to-b from-primary-300 via-violet-300 to-emerald-300" />
                 <div className="space-y-4">
                   {[
                     {
                       title: 'Phase 1 • Alpha Launch',
-                      date: '18.04.',
+                      date: '03.05.',
                       icon: CalendarDays,
                       color: 'bg-primary-600',
                       text: 'Start der Alpha mit Kernsystemen für Klinik, Rettungsdienst, Progression und Wirtschaft.',
@@ -386,11 +386,11 @@ export default function Landing() {
               </div>
             </div>
             <div className="card p-6">
-              <p className="text-sm font-semibold text-violet-600 uppercase tracking-wider mb-2">Changelog</p>
+              <p className="text-sm font-semibold text-violet-600 uppercase tracking-wider mb-2">Release-Info</p>
               <h3 className="font-display text-2xl font-bold text-surface-900 mb-4">Wird zum Alpha-Start gefüllt</h3>
               <div className="rounded-xl border border-dashed border-surface-300 bg-surface-50 px-4 py-5 text-sm text-surface-600">
-                Die ersten Changelog-Einträge folgen direkt nach dem Alpha-Release.
-                Danach erhältst du hier versionierte Updates mit Datum und Highlights.
+                Zum Start am 03.05. schalten wir die ersten Alpha-Zugaenge frei.
+                Danach findest du hier kuenftig Updates, Termine und Highlights.
               </div>
             </div>
           </div>
@@ -575,8 +575,8 @@ export default function Landing() {
             Bereit für den Alpha-Start?
           </h2>
           <p className="text-xl text-primary-100 mb-10 max-w-2xl mx-auto">
-            Zugriff aktuell nur zu internen Demonstrations- und Entwicklungszwecken.
-            Inhalte und Funktionsumfang sind vorläufig und können sich jederzeit ändern.
+            Die ersten Alpha-Zugaenge starten am 03.05.
+            Inhalte und Funktionsumfang koennen sich waehrend der Testphase noch aendern.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <button onClick={() => setWaitlistOpen(true)} className="inline-flex items-center gap-2 px-8 py-4 bg-white text-primary-700 font-semibold rounded-xl hover:bg-primary-50 transition-colors shadow-xl text-lg">
@@ -700,7 +700,7 @@ export default function Landing() {
                     onChange={(e) => setWaitlistForm((p) => ({ ...p, consentUpdates: e.target.checked }))}
                     className="mt-0.5"
                   />
-                  <span>Ich möchte zusätzlich gelegentliche Produkt-Updates und Dev-Logs erhalten. (optional)</span>
+                  <span>Ich moechte zusaetzlich gelegentliche Produkt-Updates erhalten. (optional)</span>
                 </label>
                 <p className="text-xs text-surface-500">
                   Hinweis: Die Warteliste ist unverbindlich. Nach Absenden erhältst du eine Bestätigungs-E-Mail (Double-Opt-In).

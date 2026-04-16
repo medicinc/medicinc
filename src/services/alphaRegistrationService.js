@@ -49,7 +49,7 @@ export function clearAlphaRegistrationToken() {
 export async function requestAlphaRegistrationGate(code) {
   const sb = getSupabaseClient()
   const body = { code: sanitize(code) }
-  if (!sb) return { ok: false, message: 'Supabase ist nicht konfiguriert.' }
+  if (!sb) return { ok: false, message: 'Die Alpha-Registrierung ist derzeit nicht verfuegbar.' }
   const { data, error } = await sb.functions.invoke('alpha-registration-gate', { body })
   if (error) {
     const fallback = await fetch(getFunctionUrl('alpha-registration-gate'), {
@@ -80,7 +80,7 @@ export async function registerWithAlphaGate({ name, email, password, consents, g
     },
     gateToken: sanitize(gateToken),
   }
-  if (!sb) return { ok: false, message: 'Supabase ist nicht konfiguriert.' }
+  if (!sb) return { ok: false, message: 'Die Alpha-Registrierung ist derzeit nicht verfuegbar.' }
   const { data, error } = await sb.functions.invoke('alpha-register', { body })
   if (error) {
     const fallback = await fetch(getFunctionUrl('alpha-register'), {

@@ -2,7 +2,6 @@ import { Outlet } from 'react-router-dom'
 import Navbar from './Navbar'
 import Footer from './Footer'
 import GlobalPager from '../GlobalPager'
-import GlobalDevMenu from './GlobalDevMenu'
 import DailyLoginOverlay from '../DailyLoginOverlay'
 import { useAuth } from '../../context/AuthContext'
 import { canClaimDailyLogin, localCalendarDateKey, DAILY_LOGIN_TOTAL_DAYS } from '../../data/dailyLoginRewards'
@@ -14,7 +13,6 @@ export default function Layout() {
     user,
     updateUser,
     payLegalBail,
-    clearLegalState,
     acknowledgeLegalNotice,
     dailyLoginPanelOpen,
     closeDailyLoginPanel,
@@ -75,7 +73,6 @@ export default function Layout() {
         <Outlet />
       </main>
       {showPager && <GlobalPager />}
-      <GlobalDevMenu />
       {showDailyLogin && (
         <DailyLoginOverlay
           user={user}
@@ -144,9 +141,6 @@ export default function Layout() {
                       disabled={(user?.wallet || 0) < Number(legalState?.bailAmount || 0)}
                     >
                       Freikaufen
-                    </button>
-                    <button onClick={() => clearLegalState()} className="btn-secondary text-sm">
-                      DEV: Sofort freikaufen
                     </button>
                   </>
                 ) : (

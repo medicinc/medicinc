@@ -24,7 +24,7 @@ export async function submitWaitlistEntry(payload) {
     consentUpdates: !!payload?.consentUpdates,
     source: sanitize(payload?.source || 'landing'),
   }
-  if (!sb) return { ok: false, message: 'Supabase ist nicht konfiguriert.' }
+  if (!sb) return { ok: false, message: 'Die Warteliste ist derzeit nicht verfuegbar.' }
   const { data, error } = await sb.functions.invoke('waitlist-submit', { body })
   if (error) {
     const fallback = await fetch(getFunctionUrl('waitlist-submit'), {
@@ -43,7 +43,7 @@ export async function submitWaitlistEntry(payload) {
 export async function confirmWaitlistEntry({ email, token }) {
   const sb = getSupabaseClient()
   const body = { email: sanitize(email).toLowerCase(), token: sanitize(token) }
-  if (!sb) return { ok: false, message: 'Supabase ist nicht konfiguriert.' }
+  if (!sb) return { ok: false, message: 'Die Bestaetigung ist derzeit nicht verfuegbar.' }
   const { data, error } = await sb.functions.invoke('waitlist-confirm', { body })
   if (error) {
     const fallback = await fetch(getFunctionUrl('waitlist-confirm'), {

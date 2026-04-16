@@ -74,8 +74,8 @@ export default function Settings() {
     const remote = await requestSupabaseDsarExport(user)
     const local = await exportUserDataBundle(user)
     const bundle = {
-      source: remote.ok ? 'supabase+local' : 'local-only',
-      remote: remote.ok ? remote.data : { message: remote.message || 'Kein Supabase-Export verfügbar.' },
+      source: remote.ok ? 'cloud+local' : 'local-only',
+      remote: remote.ok ? remote.data : { message: remote.message || 'Kein Cloud-Export verfuegbar.' },
       local: local.data,
     }
     const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' })
@@ -85,7 +85,7 @@ export default function Settings() {
     a.download = `medisim-dsar-export-${new Date().toISOString().slice(0, 10)}.json`
     a.click()
     URL.revokeObjectURL(url)
-    setPrivacyInfo(remote.ok ? 'Export erstellt (Supabase + lokal).' : 'Export erstellt (nur lokale Daten, keine gültige Cloud-Session).')
+    setPrivacyInfo(remote.ok ? 'Export erstellt (Cloud + lokal).' : 'Export erstellt (nur lokale Daten, keine gueltige Cloud-Sitzung).')
     setTimeout(() => setPrivacyInfo(''), 3200)
   }
 
@@ -96,7 +96,7 @@ export default function Settings() {
       setFeedbackNotice({
         variant: 'error',
         text:
-          'Hierfür brauchst du ein registriertes Konto per E-Mail (Supabase): App-User-ID muss eine UUID sein und Supabase muss erreichbar sein.',
+          'Dafuer brauchst du ein registriertes Konto mit aktiver Online-Sitzung.',
       })
       setTimeout(() => setFeedbackNotice({ variant: null, text: '' }), 12000)
       return
@@ -171,7 +171,7 @@ export default function Settings() {
     setPrivacyInfo(
       serverWipe
         ? 'Lokale Daten entfernt; Server-Löschung wurde ausgelöst. Du kannst dich bei Bedarf neu registrieren.'
-        : 'Lokale App-Daten und Session wurden entfernt. Ein vollständiges Löschen des Supabase-Kontos und aller Cloud-Tabellen ist über den DSAR-Endpunkt noch nicht implementiert – wende dich bei Bedarf an den Betreiber.',
+        : 'Lokale App-Daten und Sitzung wurden entfernt. Fuer eine vollstaendige Kontoloeschung kontaktiere bitte den Support im Impressum.',
     )
   }
 
@@ -247,7 +247,7 @@ export default function Settings() {
             <strong className="font-medium text-surface-800">Pflichtlängen:</strong> Titel mindestens 2 Zeichen, Beschreibung mindestens 10 Zeichen
           </span>
           {!feedbackAvailable && (
-            <span className="block mt-1 text-amber-800"> Hinweis: Nur mit E-Mail-Konto (Supabase), nicht mit rein lokalen Demo-Logins.</span>
+            <span className="block mt-1 text-amber-800">Hinweis: Feedback ist nur mit aktivem Online-Konto verfuegbar.</span>
           )}
         </p>
         <div className="grid sm:grid-cols-2 gap-3">
@@ -346,9 +346,9 @@ export default function Settings() {
           <Shield className="w-4 h-4 text-indigo-600" /> Datenschutz & Rechte (DSAR)
         </h2>
         <p className="text-sm text-surface-500 leading-relaxed">
-          <strong className="font-medium text-surface-700">Datenexport:</strong> Die JSON-Datei enthält zum einen ein{' '}
+          <strong className="font-medium text-surface-700">Datenexport:</strong> Die JSON-Datei enthaelt zum einen ein{' '}
           <strong className="font-medium text-surface-700">lokales Profil</strong> (Snapshot aus dem Browser, u. a. Spielstand und Einstellungen)
-          und – bei gültiger Supabase-Session – einen <strong className="font-medium text-surface-700">Cloud-Auszug</strong> mit
+          und – bei gueltiger Online-Sitzung – einen <strong className="font-medium text-surface-700">Cloud-Auszug</strong> mit
           Kontometadaten (z. B. E-Mail, Nutzer-ID) sowie der Zeile <code className="text-xs bg-surface-100 px-1 rounded">profiles</code> inklusive{' '}
           <code className="text-xs bg-surface-100 px-1 rounded">game_data</code>. Chatverläufe, alle Krankenhausdetails oder vollständige
           Multiplayer-Historie sind darin noch nicht enthalten.

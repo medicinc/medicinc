@@ -7,7 +7,7 @@ import { selectQuestions, prepareQuestion, formatTime, getTimerSeconds } from '.
 import {
   BookOpen, Siren, Heart, Pill, Scissors, Check, X, ArrowRight,
   ArrowLeft, Trophy, AlertTriangle, Star, GraduationCap, ClipboardList,
-  Zap, ShieldCheck, RotateCcw, Terminal, Clock, Ambulance, Stethoscope
+  Zap, ShieldCheck, RotateCcw, Clock, Ambulance, Stethoscope
 } from 'lucide-react'
 
 const iconMap = { BookOpen, Siren, Heart, Pill, Scissors, Ambulance, Stethoscope }
@@ -22,7 +22,6 @@ export default function Onboarding() {
   const [confirmed, setConfirmed] = useState(false)
   const [answers, setAnswers] = useState([])
   const [examResult, setExamResult] = useState(null)
-  const [devCode, setDevCode] = useState('')
   const [timeLeft, setTimeLeft] = useState(0)
   const [selectedTrack, setSelectedTrack] = useState(
     user?.pendingMedicalOnboarding
@@ -67,37 +66,6 @@ export default function Onboarding() {
       finishExam([...answers, ...(new Array(preparedQuestions.length - answers.length).fill(-1))])
     }
   }, [timeLeft])
-
-  const handleDevSkip = (e) => {
-    e.preventDefault()
-    if (devCode.toLowerCase() === 'skip') {
-      if (effectiveTrack === 'rescue') {
-        const allIds = RESCUE_EXAMS.map(e => e.id)
-        updateUser({
-          completedRescueExams: allIds,
-          onboardingComplete: true,
-          careerTrack: user?.careerTrack || 'rescue',
-          rescueCertified: true,
-          rescueLevel: user?.rescueLevel || 'rettungssanitaeter',
-          pendingRescueOnboarding: false,
-          profession: user?.medicalLicense ? 'dual' : 'rettungssanitaeter',
-        })
-      } else {
-        const allIds = SUBJECT_EXAMS.map(e => e.id)
-        updateUser({
-          completedExams: allIds,
-          onboardingComplete: true,
-          medicalLicense: true,
-          pendingMedicalOnboarding: false,
-          careerTrack: user?.careerTrack || 'medical',
-          profession: user?.rescueCertified ? 'dual' : 'assistenzarzt',
-          showDailyLoginIntro: true,
-        })
-      }
-      resetTutorialFlags()
-      navigate(effectiveTrack === 'rescue' ? '/rescue-station-choice' : '/hospital-choice')
-    }
-  }
 
   const startExam = (exam) => {
     const count = exam.questionsPerAttempt || 10
@@ -328,14 +296,6 @@ export default function Onboarding() {
             ? 'Bevor du im Rettungsdienst in den Dienst gehst, musst du die Pflichtprüfungen ablegen. Fragen und Antworten werden pro Versuch zufällig gemischt.'
             : 'Damit der Einstieg im Klinikalltag stimmig ist, legst du zuerst drei kompakte Pflichtchecks zu Grundlagen ab. Die Fragen werden jedes Mal neu gemischt – wie in einer kurzen Vorbereitung vor dem Stationsbeginn.'}
         </p>
-      </div>
-
-      <div className="card p-4 mb-6 bg-surface-50 border-dashed">
-        <form onSubmit={handleDevSkip} className="flex items-center gap-3">
-          <Terminal className="w-5 h-5 text-surface-400 shrink-0" />
-          <input type="text" value={devCode} onChange={(e) => setDevCode(e.target.value)} className="flex-1 bg-transparent text-sm text-surface-600 outline-none placeholder:text-surface-400" placeholder="Entwickler-Code eingeben..." />
-          <button type="submit" className="text-xs font-medium text-surface-500 hover:text-surface-700 px-3 py-1 rounded-lg hover:bg-surface-200 transition-colors">Ausführen</button>
-        </form>
       </div>
 
       <div className="card p-6 mb-8">

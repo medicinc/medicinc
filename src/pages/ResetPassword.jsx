@@ -78,7 +78,7 @@ export default function ResetPassword() {
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-8">
         <Seo title="Passwort zurücksetzen | Medic Inc" description="Neues Passwort für Medic Inc setzen." noindex />
         <div className="w-full max-w-md card p-8 text-center">
-          <p className="text-surface-600 text-sm mb-4">Supabase ist nicht konfiguriert. Passwort-Reset steht nicht zur Verfügung.</p>
+          <p className="text-surface-600 text-sm mb-4">Passwort-Reset steht derzeit nicht zur Verfuegung.</p>
           <Link to="/login" className="btn-primary inline-flex">Zum Login</Link>
         </div>
       </div>
