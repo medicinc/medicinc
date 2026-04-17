@@ -527,7 +527,7 @@ export default function Landing() {
                       alt={shot.alt}
                       loading="lazy"
                       decoding="async"
-                      className={`w-full object-contain bg-slate-950 transition-transform duration-500 group-hover:scale-[1.015] ${
+                      className={`w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] ${
                         idx === 0 ? 'aspect-[16/8.5]' : 'aspect-video'
                       }`}
                     />
