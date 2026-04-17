@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import {
   Save, Settings as SettingsIcon, Check, RotateCcw, Shield, Download, Trash2,
-  MessageSquarePlus, Paperclip, Loader2, AlertCircle, Bug,
+  MessageSquarePlus, Paperclip, Loader2, AlertCircle,
 } from 'lucide-react'
 import { exportUserDataBundle } from '../services/profileService'
 import { requestSupabaseDsarDelete, requestSupabaseDsarExport } from '../services/dsarService'
@@ -13,7 +13,7 @@ const FEEDBACK_MIN_TITLE = 2
 const FEEDBACK_MIN_BODY = 10
 
 export default function Settings() {
-  const { user, updateUser, deleteUserAccountData, logout, forceLocalLogoutDebug, getLogoutDebugInfo } = useAuth()
+  const { user, updateUser, deleteUserAccountData } = useAuth()
   const [textBlocks, setTextBlocks] = useState(Array.isArray(user?.documentTextBlocks) ? user.documentTextBlocks.join('\n') : '')
   const [saved, setSaved] = useState(false)
   const [tutorialResetInfo, setTutorialResetInfo] = useState('')
@@ -29,8 +29,6 @@ export default function Settings() {
   const [fileInputKey, setFileInputKey] = useState(0)
   const [feedbackSending, setFeedbackSending] = useState(false)
   const [feedbackNotice, setFeedbackNotice] = useState({ variant: null, text: '' })
-  const [logoutDebugInfo, setLogoutDebugInfo] = useState(null)
-  const [logoutDebugBusy, setLogoutDebugBusy] = useState(false)
 
   const feedbackAvailable = Boolean(user && isUuid(user.id) && getSupabaseClient())
 
@@ -175,26 +173,6 @@ export default function Settings() {
         ? 'Lokale Daten entfernt; Server-Löschung wurde ausgelöst. Du kannst dich bei Bedarf neu registrieren.'
         : 'Lokale App-Daten und Sitzung wurden entfernt. Fuer eine vollstaendige Kontoloeschung kontaktiere bitte den Support im Impressum.',
     )
-  }
-
-  const isLogoutDebugEnabled = user?.role === 'admin'
-
-  const refreshLogoutDebug = () => {
-    const info = getLogoutDebugInfo?.()
-    setLogoutDebugInfo(info || null)
-  }
-
-  const testNormalLogoutDebug = async () => {
-    setLogoutDebugBusy(true)
-    try {
-      await logout()
-    } finally {
-      setLogoutDebugBusy(false)
-    }
-  }
-
-  const forceLocalLogoutNow = () => {
-    forceLocalLogoutDebug?.()
   }
 
   return (
@@ -393,34 +371,6 @@ export default function Settings() {
         </div>
       </div>
 
-      {isLogoutDebugEnabled && (
-        <div className="card p-6 space-y-3 border-amber-200 bg-amber-50/40">
-          <h2 className="font-semibold text-surface-900 flex items-center gap-2">
-            <Bug className="w-4 h-4 text-amber-700" /> Logout-Debug (temporär)
-          </h2>
-          <p className="text-sm text-surface-600">
-            Nur fuer Admins: Hilft beim Debuggen von hängendem Logout. Kann nach dem Fix wieder entfernt werden.
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <button onClick={refreshLogoutDebug} className="btn-secondary">Debugstatus laden</button>
-            <button onClick={testNormalLogoutDebug} disabled={logoutDebugBusy} className="btn-secondary disabled:opacity-60">
-              {logoutDebugBusy ? 'Teste Logout…' : 'Normales Logout testen'}
-            </button>
-            <button onClick={forceLocalLogoutNow} className="btn-secondary border-amber-300 text-amber-800">
-              Force Local Logout
-            </button>
-          </div>
-          {logoutDebugInfo && (
-            <div className="rounded-xl border border-amber-200 bg-white p-3 text-xs text-surface-700 space-y-1 font-mono">
-              <p>local auth keys: {logoutDebugInfo.localAuthKeys?.length || 0}</p>
-              <p>session auth keys: {logoutDebugInfo.sessionAuthKeys?.length || 0}</p>
-              <p>local details: {logoutDebugInfo.localAuthDetails?.length ? JSON.stringify(logoutDebugInfo.localAuthDetails) : '[]'}</p>
-              <p>session details: {logoutDebugInfo.sessionAuthDetails?.length ? JSON.stringify(logoutDebugInfo.sessionAuthDetails) : '[]'}</p>
-              <p>last logout: {logoutDebugInfo.lastLogout ? JSON.stringify(logoutDebugInfo.lastLogout) : 'none'}</p>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   )
 }

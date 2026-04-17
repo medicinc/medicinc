@@ -6,7 +6,7 @@ import {
   Activity, Stethoscope, Brain, Heart, Building2, Users,
   Zap, Shield, ArrowRight, Star, ChevronRight, Trophy,
   Microscope, Syringe, Monitor, TrendingUp, X, Mail, UserRound, CheckCircle2, CalendarDays, Wrench, Rocket, Flag,
-  MessageSquare, Sparkles, Lock,
+  MessageSquare, Sparkles, Lock, PlayCircle, ImageIcon,
 } from 'lucide-react'
 
 const features = [
@@ -64,6 +64,59 @@ const specialties = [
 
 const LANDING_META_DESC =
   'Medic Inc: Medizinische Simulation mit KI-gestütztem Patienten- und Team-Chat, Krankenhaus-Management und Rettungsdienst. Alpha-Warteliste, realistische Fälle, Multiplayer. Kein Echtbetrieb – Lern- und Trainingssimulation.'
+
+const gameplayPreviewShots = [
+  {
+    src: '/previews/krankenhaus-uebersicht.png',
+    alt: 'Krankenhaus Uebersicht mit aktiven Faellen und Stationsnavigation',
+    title: 'Krankenhausbetrieb im Echtzeitfluss',
+    description: 'Faelle priorisieren, Akten oeffnen und Teams koordinieren.',
+    badge: 'Krankenhaus',
+  },
+  {
+    src: '/previews/patientenzimmer.png',
+    alt: 'Patientenzimmer mit Geraeten und interaktiven Aktionsflaechen',
+    title: 'Interaktive Behandlungszimmer',
+    description: 'Monitoring, Medikation und klinische Entscheidungen direkt im Raum.',
+    badge: 'Behandlung',
+  },
+  {
+    src: '/previews/akte-diagnose.png',
+    alt: 'Patientenakte mit Diagnosen, Verlauf und Entlasscheckliste',
+    title: 'Akte und Diagnostik',
+    description: 'ICD-10, Verlauf, Diagnosesicherheit und Entlassungsschritte in einer Ansicht.',
+    badge: 'Dokumentation',
+  },
+  {
+    src: '/previews/rd-start.png',
+    alt: 'Rettungsdienst Startansicht mit Funkstatus und Stadtkarte',
+    title: 'Leitstelle und Einsatzannahme',
+    description: 'Dienststatus setzen, Funkdisposition starten und Einsaetze koordinieren.',
+    badge: 'Rettungsdienst',
+  },
+  {
+    src: '/previews/rd-einsatz.png',
+    alt: 'Rettungsdiensteinsatz mit Einsatzprotokoll und Patientenansicht',
+    title: 'Einsatzlage vor Ort',
+    description: 'Anamnese, Versorgung und Transportentscheidung im laufenden Fall.',
+    badge: 'Einsatz',
+  },
+]
+
+const gameplayPreviewClips = [
+  {
+    src: '/previews/triage-ablauf.mp4',
+    title: 'Clip: Triage-Ablauf',
+    description: 'Schnelle Einordnung und Priorisierung im Notaufnahme-Flow.',
+    poster: '/previews/krankenhaus-uebersicht.png',
+  },
+  {
+    src: '/previews/kurse-uebersicht.mp4',
+    title: 'Clip: Kurs-Uebersicht',
+    description: 'Lernpfade, Freischaltungen und Progression im Kursbereich.',
+    poster: '/previews/akte-diagnose.png',
+  },
+]
 
 export default function Landing() {
   const [waitlistOpen, setWaitlistOpen] = useState(false)
@@ -418,6 +471,79 @@ export default function Landing() {
                 <h3 className="text-xl font-semibold text-surface-900 mb-3">{feature.title}</h3>
                 <p className="text-surface-500 leading-relaxed">{feature.description}</p>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section
+        id="landing-gameplay-preview"
+        className="py-24 bg-gradient-to-b from-white via-slate-50 to-white border-y border-surface-100"
+        aria-labelledby="gameplay-preview-heading"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl mb-10">
+            <p className="text-sm font-semibold text-primary-600 uppercase tracking-wider mb-3">Ingame Vorschau</p>
+            <h2 id="gameplay-preview-heading" className="font-display text-4xl sm:text-5xl font-bold text-surface-900">
+              So sieht Medic Inc im Spiel aus
+            </h2>
+            <p className="mt-4 text-lg text-surface-600 leading-relaxed">
+              Echte Ingame-Einblicke aus Krankenhaus, Rettungsdienst und Dokumentation.
+              Die folgenden Bilder und Clips zeigen den aktuellen Alpha-Stand der UI und Kernablaeufe.
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-3 gap-5">
+            {gameplayPreviewShots.map((shot) => (
+              <article
+                key={shot.src}
+                className="overflow-hidden rounded-2xl border border-surface-200 bg-white shadow-sm hover:shadow-md transition-shadow"
+              >
+                <div className="relative">
+                  <img
+                    src={shot.src}
+                    alt={shot.alt}
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full aspect-video object-cover"
+                  />
+                  <span className="absolute top-3 left-3 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-surface-700 border border-surface-200">
+                    <ImageIcon className="w-3.5 h-3.5" aria-hidden />
+                    {shot.badge}
+                  </span>
+                </div>
+                <div className="p-4">
+                  <h3 className="font-semibold text-surface-900">{shot.title}</h3>
+                  <p className="mt-1 text-sm text-surface-600">{shot.description}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="mt-10 grid lg:grid-cols-2 gap-5">
+            {gameplayPreviewClips.map((clip) => (
+              <article
+                key={clip.src}
+                className="overflow-hidden rounded-2xl border border-surface-200 bg-white shadow-sm hover:shadow-md transition-shadow"
+              >
+                <video
+                  controls
+                  preload="metadata"
+                  playsInline
+                  className="w-full aspect-video object-cover bg-slate-900"
+                  poster={clip.poster}
+                >
+                  <source src={clip.src} type="video/mp4" />
+                  Dein Browser unterstuetzt dieses Videoformat nicht.
+                </video>
+                <div className="p-4">
+                  <h3 className="font-semibold text-surface-900 flex items-center gap-2">
+                    <PlayCircle className="w-4 h-4 text-primary-600" aria-hidden />
+                    {clip.title}
+                  </h3>
+                  <p className="mt-1 text-sm text-surface-600">{clip.description}</p>
+                </div>
+              </article>
             ))}
           </div>
         </div>
