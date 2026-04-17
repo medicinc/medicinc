@@ -1,11 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-labelledby="title desc">
+  <title id="title">Medic Inc Mark</title>
+  <desc id="desc">Square brand mark with blue to green gradient and activity pulse line, matching primary-500 and accent-500.</desc>
   <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#338cff;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#17b164;stop-opacity:1" />
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#338cff"/>
+      <stop offset="100%" stop-color="#17b164"/>
     </linearGradient>
   </defs>
-  <rect width="64" height="64" rx="14" fill="url(#grad)"/>
-  <path d="M32 14 L32 50 M20 32 L44 32" stroke="white" stroke-width="6" stroke-linecap="round"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="white" stroke-width="3" opacity="0.3"/>
+  <!-- Matches rounded-xl at 36x36 px: r = 12/36 -->
+  <rect width="1024" height="1024" rx="341.333" fill="url(#g)"/>
+  <!-- Lucide activity path (MIT), centered like w-9 + w-5 -->
+  <svg x="227.556" y="227.556" width="568.889" height="568.889" viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet">
+    <path
+      d="M22 12h-4l-3 9L9 3l-3 9H2"
+      fill="none"
+      stroke="#ffffff"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </svg>
 </svg>
