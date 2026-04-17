@@ -106,6 +106,14 @@ export default function DailyLoginOverlay({ user, updateUser, manualOpen = false
       <div className="fixed inset-0 z-[115] flex items-center justify-center p-4">
         <div className="absolute inset-0 bg-slate-900/65 backdrop-blur-sm" onClick={() => { /* block dismiss */ }} />
         <div className="relative w-full max-w-md rounded-3xl border border-violet-200 bg-gradient-to-b from-white via-violet-50/40 to-white shadow-2xl overflow-hidden">
+          <button
+            type="button"
+            onClick={handleHeaderClose}
+            className="absolute top-3 right-3 z-10 p-2 rounded-lg text-violet-800/80 hover:bg-violet-100"
+            aria-label="Schließen"
+          >
+            <X className="w-4 h-4" />
+          </button>
           <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-amber-300/30 blur-2xl" />
           <div className="absolute -bottom-12 -left-12 w-40 h-40 rounded-full bg-violet-400/20 blur-2xl" />
           <div className="relative p-6 pt-8">
@@ -147,7 +155,7 @@ export default function DailyLoginOverlay({ user, updateUser, manualOpen = false
   if (!showCalendar) return null
 
   const waitMs = msUntilNextDailyLoginWindow()
-  const showHeaderClose = manualOpen || !introMode
+  const showHeaderClose = true
 
   return (
     <div className="fixed inset-0 z-[115] flex items-center justify-center p-4">
