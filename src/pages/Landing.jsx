@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Seo from '../components/Seo'
 import { submitWaitlistEntry } from '../services/waitlistService'
@@ -135,6 +135,7 @@ export default function Landing() {
   const [waitlistLoading, setWaitlistLoading] = useState(false)
   const [waitlistError, setWaitlistError] = useState('')
   const [waitlistInfo, setWaitlistInfo] = useState('')
+  const [activePreviewShot, setActivePreviewShot] = useState(null)
 
   const scrollToAiChat = () => {
     document.getElementById('landing-ai-chat')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -195,6 +196,19 @@ export default function Landing() {
       setWaitlistInfo('')
     }, 1800)
   }
+
+  useEffect(() => {
+    if (!activePreviewShot) return undefined
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') setActivePreviewShot(null)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      document.body.style.overflow = ''
+    }
+  }, [activePreviewShot])
 
   return (
     <div className="overflow-hidden">
@@ -478,7 +492,7 @@ export default function Landing() {
 
       <section
         id="landing-gameplay-preview"
-        className="py-24 bg-gradient-to-b from-white via-slate-50 to-white border-y border-surface-100"
+        className="py-24 bg-gradient-to-b from-white via-primary-50/30 to-violet-50/30 border-y border-surface-100"
         aria-labelledby="gameplay-preview-heading"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -493,20 +507,35 @@ export default function Landing() {
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-5">
-            {gameplayPreviewShots.map((shot) => (
+          <div className="grid lg:grid-cols-12 gap-5">
+            {gameplayPreviewShots.map((shot, idx) => (
               <article
                 key={shot.src}
-                className="overflow-hidden rounded-2xl border border-surface-200 bg-white shadow-sm hover:shadow-md transition-shadow"
+                className={`group overflow-hidden rounded-2xl border border-surface-200/80 bg-white/95 shadow-sm hover:shadow-xl hover:shadow-primary-500/10 transition-all duration-300 ${
+                  idx === 0 ? 'lg:col-span-8' : 'lg:col-span-4'
+                }`}
               >
                 <div className="relative">
-                  <img
-                    src={shot.src}
-                    alt={shot.alt}
-                    loading="lazy"
-                    decoding="async"
-                    className="w-full aspect-video object-cover"
-                  />
+                  <button
+                    type="button"
+                    onClick={() => setActivePreviewShot(shot)}
+                    className="block w-full text-left"
+                    aria-label={`${shot.title} gross anzeigen`}
+                  >
+                    <img
+                      src={shot.src}
+                      alt={shot.alt}
+                      loading="lazy"
+                      decoding="async"
+                      className={`w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] ${
+                        idx === 0 ? 'aspect-[16/8.5]' : 'aspect-video'
+                      }`}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent opacity-80 pointer-events-none" />
+                    <span className="absolute bottom-3 right-3 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-surface-700 border border-surface-200 shadow-sm">
+                      Klick zum Vergroessern
+                    </span>
+                  </button>
                   <span className="absolute top-3 left-3 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-surface-700 border border-surface-200">
                     <ImageIcon className="w-3.5 h-3.5" aria-hidden />
                     {shot.badge}
@@ -524,9 +553,12 @@ export default function Landing() {
             {gameplayPreviewClips.map((clip) => (
               <article
                 key={clip.src}
-                className="overflow-hidden rounded-2xl border border-surface-200 bg-white shadow-sm hover:shadow-md transition-shadow"
+                className="group overflow-hidden rounded-2xl border border-surface-200/80 bg-white shadow-sm hover:shadow-xl hover:shadow-violet-500/10 transition-all duration-300"
               >
                 <video
+                  autoPlay
+                  loop
+                  muted
                   controls
                   preload="metadata"
                   playsInline
@@ -542,12 +574,43 @@ export default function Landing() {
                     {clip.title}
                   </h3>
                   <p className="mt-1 text-sm text-surface-600">{clip.description}</p>
+                  <p className="mt-2 text-xs text-surface-500">Laeuft automatisch in Schleife (stumm).</p>
                 </div>
               </article>
             ))}
           </div>
         </div>
       </section>
+
+      {activePreviewShot && (
+        <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 sm:p-6">
+          <button
+            type="button"
+            className="absolute inset-0 bg-slate-900/75 backdrop-blur-sm"
+            onClick={() => setActivePreviewShot(null)}
+            aria-label="Vorschau schliessen"
+          />
+          <div className="relative w-full max-w-6xl rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-2xl">
+            <img
+              src={activePreviewShot.src}
+              alt={activePreviewShot.alt}
+              className="w-full max-h-[82vh] object-contain bg-slate-950"
+            />
+            <div className="px-4 py-3 sm:px-5 sm:py-4 bg-white border-t border-surface-200">
+              <p className="font-semibold text-surface-900">{activePreviewShot.title}</p>
+              <p className="text-sm text-surface-600">{activePreviewShot.description}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setActivePreviewShot(null)}
+              className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/95 border border-surface-200 text-surface-700 hover:bg-white shadow-sm"
+              aria-label="Schliessen"
+            >
+              <X className="w-4 h-4 mx-auto" />
+            </button>
+          </div>
+        </div>
+      )}
 
       <section
         id="landing-ai-chat"
