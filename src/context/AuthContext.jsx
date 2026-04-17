@@ -11,6 +11,7 @@ import { registerWithAlphaGate } from '../services/alphaRegistrationService'
 
 const AuthContext = createContext(null)
 const XP_PER_LEVEL = 500
+const LOGOUT_TIMEOUT_MS = 7000
 const FIXED_ADMIN_ACCOUNTS = []
 const FIXED_GUEST_ACCOUNTS = []
 const FIXED_ALLOWED_ACCOUNTS = [
@@ -501,17 +502,29 @@ export function AuthProvider({ children }) {
 
   const logout = useCallback(async () => {
     const sb = getSupabaseClient()
+    const startedAt = Date.now()
+    let remoteStatus = 'skipped'
     try {
       if (sb) {
-        const { error } = await sb.auth.signOut()
-        if (error) {
-          // Keep going with local cleanup even if remote sign-out fails.
+        const timeoutPromise = new Promise((resolve) => {
+          setTimeout(() => resolve({ timedOut: true }), LOGOUT_TIMEOUT_MS)
+        })
+        const signOutPromise = sb.auth.signOut().then((res) => ({ timedOut: false, ...res }))
+        const result = await Promise.race([signOutPromise, timeoutPromise])
+        if (result?.timedOut) {
+          remoteStatus = 'timeout'
+        } else if (result?.error) {
+          remoteStatus = 'error'
+        } else {
+          remoteStatus = 'ok'
         }
       }
     } catch (_error) {
       // Keep going with local cleanup.
+      remoteStatus = 'error'
     } finally {
       setUser(null)
+      setDailyLoginPanelOpen(false)
       localStorage.removeItem('medisim_user')
       // Remove persisted Supabase auth tokens to enforce logout on this device.
       try {
@@ -521,7 +534,73 @@ export function AuthProvider({ children }) {
       } catch (_storageError) {
         // Ignore storage access issues.
       }
+      try {
+        Object.keys(sessionStorage)
+          .filter((key) => key.startsWith('sb-') && key.endsWith('-auth-token'))
+          .forEach((key) => sessionStorage.removeItem(key))
+      } catch (_storageError) {
+        // Ignore storage access issues.
+      }
+      try {
+        const debugData = {
+          ts: new Date().toISOString(),
+          durationMs: Date.now() - startedAt,
+          remoteStatus,
+        }
+        sessionStorage.setItem('medisim_logout_debug_last', JSON.stringify(debugData))
+      } catch (_storageError) {
+        // Ignore storage access issues.
+      }
     }
+  }, [])
+
+  const forceLocalLogoutDebug = useCallback(() => {
+    setUser(null)
+    setDailyLoginPanelOpen(false)
+    localStorage.removeItem('medisim_user')
+    try {
+      Object.keys(localStorage)
+        .filter((key) => key.startsWith('sb-') && key.endsWith('-auth-token'))
+        .forEach((key) => localStorage.removeItem(key))
+    } catch (_storageError) {
+      // Ignore storage access issues.
+    }
+    try {
+      Object.keys(sessionStorage)
+        .filter((key) => key.startsWith('sb-') && key.endsWith('-auth-token'))
+        .forEach((key) => sessionStorage.removeItem(key))
+    } catch (_storageError) {
+      // Ignore storage access issues.
+    }
+    try {
+      sessionStorage.setItem('medisim_logout_debug_last', JSON.stringify({
+        ts: new Date().toISOString(),
+        durationMs: 0,
+        remoteStatus: 'forced-local',
+      }))
+    } catch (_storageError) {
+      // Ignore storage access issues.
+    }
+  }, [])
+
+  const getLogoutDebugInfo = useCallback(() => {
+    const info = {
+      localAuthKeys: [],
+      sessionAuthKeys: [],
+      lastLogout: null,
+    }
+    try {
+      info.localAuthKeys = Object.keys(localStorage).filter((key) => key.startsWith('sb-') && key.endsWith('-auth-token'))
+    } catch (_storageError) {
+      // Ignore storage access issues.
+    }
+    try {
+      info.sessionAuthKeys = Object.keys(sessionStorage).filter((key) => key.startsWith('sb-') && key.endsWith('-auth-token'))
+      info.lastLogout = safeParseJson(sessionStorage.getItem('medisim_logout_debug_last'), null)
+    } catch (_storageError) {
+      // Ignore storage access issues.
+    }
+    return info
   }, [])
 
   const deleteUserAccountData = useCallback(async () => {
@@ -560,6 +639,8 @@ export function AuthProvider({ children }) {
       user, login, register, logout, updateUser, addMoney,
       triggerPolicePenalty, clearLegalState, payLegalBail, acknowledgeLegalNotice, resetUserProfile,
       deleteUserAccountData,
+      forceLocalLogoutDebug,
+      getLogoutDebugInfo,
       isAuthenticated: !!user,
       authLoading,
       needsOnboarding,
