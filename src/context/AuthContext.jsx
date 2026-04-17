@@ -12,6 +12,7 @@ import { registerWithAlphaGate } from '../services/alphaRegistrationService'
 const AuthContext = createContext(null)
 const XP_PER_LEVEL = 500
 const LOGOUT_TIMEOUT_MS = 7000
+const LOGIN_TIMEOUT_MS = 12000
 const FIXED_ADMIN_ACCOUNTS = []
 const FIXED_GUEST_ACCOUNTS = []
 const FIXED_ALLOWED_ACCOUNTS = [
@@ -33,6 +34,13 @@ function safeParseJson(value, fallback = null) {
   } catch (_error) {
     return fallback
   }
+}
+
+function withTimeout(promise, timeoutMs, timeoutMessage) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs)),
+  ])
 }
 
 function withLevelProgress(rawUser) {
@@ -291,7 +299,11 @@ export function AuthProvider({ children }) {
       : (resolvedCandidate?.email ? String(resolvedCandidate.email).trim().toLowerCase() : null)
     if (sb) {
       if (!email) throw new Error('Bitte melde dich mit der E-Mail-Adresse deines Kontos an.')
-      const { data, error } = await sb.auth.signInWithPassword({ email, password })
+      const { data, error } = await withTimeout(
+        sb.auth.signInWithPassword({ email, password }),
+        LOGIN_TIMEOUT_MS,
+        'Anmeldung hat zu lange gedauert. Bitte versuche es erneut.',
+      )
       if (!error && data.session?.user) {
         await migrateLocalProfileToSupabaseIfNeeded(data.session.user)
         const mapped = await buildUserFromSession(data.session)
@@ -509,7 +521,7 @@ export function AuthProvider({ children }) {
         const timeoutPromise = new Promise((resolve) => {
           setTimeout(() => resolve({ timedOut: true }), LOGOUT_TIMEOUT_MS)
         })
-        const signOutPromise = sb.auth.signOut().then((res) => ({ timedOut: false, ...res }))
+        const signOutPromise = sb.auth.signOut({ scope: 'local' }).then((res) => ({ timedOut: false, ...res }))
         const result = await Promise.race([signOutPromise, timeoutPromise])
         if (result?.timedOut) {
           remoteStatus = 'timeout'
@@ -587,15 +599,29 @@ export function AuthProvider({ children }) {
     const info = {
       localAuthKeys: [],
       sessionAuthKeys: [],
+      localAuthDetails: [],
+      sessionAuthDetails: [],
       lastLogout: null,
     }
     try {
       info.localAuthKeys = Object.keys(localStorage).filter((key) => key.startsWith('sb-') && key.endsWith('-auth-token'))
+      info.localAuthDetails = info.localAuthKeys.map((key) => {
+        const raw = localStorage.getItem(key)
+        const parsed = safeParseJson(raw, null)
+        const hasAccessToken = Boolean(parsed?.access_token || parsed?.currentSession?.access_token)
+        return { key, hasAccessToken }
+      })
     } catch (_storageError) {
       // Ignore storage access issues.
     }
     try {
       info.sessionAuthKeys = Object.keys(sessionStorage).filter((key) => key.startsWith('sb-') && key.endsWith('-auth-token'))
+      info.sessionAuthDetails = info.sessionAuthKeys.map((key) => {
+        const raw = sessionStorage.getItem(key)
+        const parsed = safeParseJson(raw, null)
+        const hasAccessToken = Boolean(parsed?.access_token || parsed?.currentSession?.access_token)
+        return { key, hasAccessToken }
+      })
       info.lastLogout = safeParseJson(sessionStorage.getItem('medisim_logout_debug_last'), null)
     } catch (_storageError) {
       // Ignore storage access issues.

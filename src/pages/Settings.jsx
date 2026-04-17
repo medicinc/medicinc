@@ -414,6 +414,8 @@ export default function Settings() {
             <div className="rounded-xl border border-amber-200 bg-white p-3 text-xs text-surface-700 space-y-1 font-mono">
               <p>local auth keys: {logoutDebugInfo.localAuthKeys?.length || 0}</p>
               <p>session auth keys: {logoutDebugInfo.sessionAuthKeys?.length || 0}</p>
+              <p>local details: {logoutDebugInfo.localAuthDetails?.length ? JSON.stringify(logoutDebugInfo.localAuthDetails) : '[]'}</p>
+              <p>session details: {logoutDebugInfo.sessionAuthDetails?.length ? JSON.stringify(logoutDebugInfo.sessionAuthDetails) : '[]'}</p>
               <p>last logout: {logoutDebugInfo.lastLogout ? JSON.stringify(logoutDebugInfo.lastLogout) : 'none'}</p>
             </div>
           )}
